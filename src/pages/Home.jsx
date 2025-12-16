@@ -78,12 +78,12 @@ const Home = () => {
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Trophy className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">$1k+</span>
+          <span className="text-3xl font-bold text-text-main mb-1">$100</span>
           <span className="text-sm text-text-muted uppercase tracking-wider">Prize Pool</span>
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Star className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">Pro</span>
+          <span className="text-3xl font-bold text-text-main mb-1">3.75+ DUPR</span>
           <span className="text-sm text-text-muted uppercase tracking-wider">Level Format</span>
         </Card>
       </div>
@@ -129,7 +129,7 @@ const Home = () => {
             <div className="space-y-6">
               <div>
                 <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Date</p>
-                <p className="text-xl font-bold text-text-main">Sunday, December 22nd</p>
+                <p className="text-xl font-bold text-text-main">Sunday, December 28th</p>
               </div>
               <div>
                 <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Time</p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { rules } from '../data/leagueData';
+import { rules } from '../data/rules';
 import { Trophy, Users, ArrowDown, ArrowUp, CheckCircle, AlertCircle, MapPin, Clock, DollarSign, ExternalLink, User, Send, MessageSquare } from 'lucide-react';
 import WeeklyPoints from '../components/WeeklyPoints';
 import Card from '../components/ui/Card';
@@ -160,6 +160,62 @@ const Format = () => {
         </div>
       </div>
 
+      {/* Seeding & Assignments */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-text-main mb-4">Seeding & Assignments</h2>
+          <p className="text-text-muted max-w-2xl mx-auto">
+            Your season performance determines your starting position each week.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-text-main mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Initial Seeding
+            </h3>
+            <p className="text-text-muted mb-4">
+              Players are ranked 1-16 based on their current season points. In Week 1, DUPR ratings are used.
+            </p>
+            <div className="bg-surface-highlight p-4 rounded-lg border border-border">
+              <h4 className="font-bold text-sm text-text-main mb-2">Why Seeding Matters</h4>
+              <p className="text-sm text-text-muted">
+                Higher seeds are placed in groups with lower-seeded opponents in Round 1. This gives top players a statistical advantage to finish Top 2 and advance to the Upper Bracket immediately.
+              </p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-xl font-bold text-text-main mb-4 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              The Snake Draw
+            </h3>
+            <p className="text-text-muted mb-4">
+              We use a balanced "Snake Draw" to assign the initial 4 courts. This ensures fair competition across the league.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-surface-highlight p-2 rounded border border-border">
+                <span className="font-bold block text-primary">Court 1</span>
+                <span className="text-text-muted">Seeds 1, 8, 9, 16</span>
+              </div>
+              <div className="bg-surface-highlight p-2 rounded border border-border">
+                <span className="font-bold block text-primary">Court 2</span>
+                <span className="text-text-muted">Seeds 2, 7, 10, 15</span>
+              </div>
+              <div className="bg-surface-highlight p-2 rounded border border-border">
+                <span className="font-bold block text-primary">Court 3</span>
+                <span className="text-text-muted">Seeds 3, 6, 11, 14</span>
+              </div>
+              <div className="bg-surface-highlight p-2 rounded border border-border">
+                <span className="font-bold block text-primary">Court 4</span>
+                <span className="text-text-muted">Seeds 4, 5, 12, 13</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
       {/* Nightly Format */}
       <div className="space-y-12">
         <div className="text-center">
@@ -186,9 +242,17 @@ const Format = () => {
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[0].title}</h3>
-                    <p className="text-text-muted">
-                      {rules.format[0].description}
-                    </p>
+                    <div className="text-text-muted text-left">
+                      {Array.isArray(rules.format[0].description) ? (
+                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
+                          {rules.format[0].description.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>{rules.format[0].description}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -213,9 +277,17 @@ const Format = () => {
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[1].title}</h3>
-                    <p className="text-text-muted">
-                      {rules.format[1].description}
-                    </p>
+                    <div className="text-text-muted text-left">
+                      {Array.isArray(rules.format[1].description) ? (
+                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
+                          {rules.format[1].description.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>{rules.format[1].description}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -240,9 +312,17 @@ const Format = () => {
                   </div>
                   <div className="flex-1 text-center md:text-left">
                     <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[2].title}</h3>
-                    <p className="text-text-muted mb-4">
-                      {rules.format[2].description}
-                    </p>
+                    <div className="text-text-muted text-left mb-4">
+                      {Array.isArray(rules.format[2].description) ? (
+                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
+                          {rules.format[2].description.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>{rules.format[2].description}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>

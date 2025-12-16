@@ -25,9 +25,14 @@ const PlayerAvatar = ({ url, name, size = 'md', className, border = true }) => {
   );
 
   if (url) {
+    // Handle relative paths for GitHub Pages deployment
+    const finalUrl = url.startsWith('/') 
+      ? `${import.meta.env.BASE_URL}${url.slice(1)}` 
+      : url;
+
     return (
       <img 
-        src={url} 
+        src={finalUrl} 
         alt={name} 
         className={baseClasses}
       />
