@@ -6,8 +6,9 @@ import { calculateSeasonStats } from '../lib/leagueUtils';
 import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import RankBadge from '../components/ui/RankBadge';
+import { Player } from '../types';
 
-const Home = () => {
+const Home: React.FC = () => {
   // Get top 3 players
   const topPlayers = React.useMemo(() => {
     if (seasonData.weeks) {
@@ -19,7 +20,16 @@ const Home = () => {
           playerId: stat.id
         }));
     }
-    return seasonData.standings.slice(0, 3);
+    // Fallback if no weeks data, though calculateSeasonStats handles empty weeks
+    return (seasonData.standings || []).slice(0, 3).map((s, i) => ({
+      ...s,
+      rank: i + 1,
+      wins: 0, // Default if using raw standings
+      losses: 0,
+      winRate: 0,
+      pointsPerWeek: 0,
+      attendance: 0
+    }));
   }, []);
 
   return (
@@ -88,6 +98,31 @@ const Home = () => {
         </Card>
       </div>
 
+      {/* Prizes Summary */}
+      <div className="bg-surface-highlight/50 rounded-2xl p-8 border border-border text-center">
+        <h2 className="text-2xl font-bold text-text-main mb-4 flex items-center justify-center gap-2">
+          <Trophy className="h-6 w-6 text-warning" />
+          Season Prizes
+        </h2>
+        <p className="text-text-muted max-w-2xl mx-auto mb-6">
+          Compete for over $200 in court credits and Paddle Up Club points. Top performers earn free entry to the next season and exclusive rewards.
+        </p>
+        <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="bg-surface p-4 rounded-xl border border-border">
+            <span className="block text-2xl font-bold text-warning mb-1">1st Place</span>
+            <span className="text-sm text-text-muted">$100 Credit + 50 Club Pts</span>
+          </div>
+          <div className="bg-surface p-4 rounded-xl border border-border">
+            <span className="block text-2xl font-bold text-text-main mb-1">2nd Place</span>
+            <span className="text-sm text-text-muted">$60 Credit + 30 Club Pts</span>
+          </div>
+          <div className="bg-surface p-4 rounded-xl border border-border">
+            <span className="block text-2xl font-bold text-text-main mb-1">3rd Place</span>
+            <span className="text-sm text-text-muted">$40 Credit + 20 Club Pts</span>
+          </div>
+        </div>
+      </div>
+
       {/* Top Players Preview */}
       <div className="grid md:grid-cols-2 gap-8">
         <Card className="h-full flex flex-col">
@@ -103,7 +138,7 @@ const Home = () => {
           
           <div className="space-y-4 flex-1">
             {topPlayers.map((entry, index) => {
-              const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", url: "" };
+              const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", url: "", id: "unknown" } as Player;
               return (
                 <Link key={entry.playerId} to={`/player/${entry.playerId}`} className="flex items-center justify-between p-3 rounded-xl bg-surface-highlight border border-border hover:border-primary/50 transition-colors group">
                   <div className="flex items-center gap-3">
@@ -154,6 +189,22 @@ const Home = () => {
             </div>
           </div>
         </Card>
+      </div>
+
+      {/* How to Join */}
+      <div className="bg-primary-light rounded-2xl p-8 md:p-12 text-center border border-primary/50">
+        <h2 className="text-3xl font-bold text-text-main mb-4">Want to Join the League?</h2>
+        <p className="text-xl text-text-muted mb-8 max-w-2xl mx-auto">
+          We are always looking for competitive players to join the roster. Check out the format and rules to see if you qualify.
+        </p>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+          <Link 
+            to="/format" 
+            className="bg-primary text-text-main px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 flex items-center gap-2"
+          >
+            View Format <ArrowRight className="h-5 w-5" />
+          </Link>
+        </div>
       </div>
     </div>
   );

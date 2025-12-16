@@ -5,14 +5,14 @@ import WeeklyPoints from '../components/WeeklyPoints';
 import Card from '../components/ui/Card';
 import PageHeader from '../components/ui/PageHeader';
 
-const ContactForm = () => {
-  const [status, setStatus] = useState(null);
+const ContactForm: React.FC = () => {
+  const [status, setStatus] = useState<'success' | 'error' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
     try {
@@ -27,7 +27,7 @@ const ContactForm = () => {
 
       if (response.ok) {
         setStatus('success');
-        e.target.reset();
+        e.currentTarget.reset();
       } else {
         setStatus('error');
       }
@@ -85,7 +85,7 @@ const ContactForm = () => {
   );
 };
 
-const Format = () => {
+const Format: React.FC = () => {
   return (
     <div className="space-y-16 pb-12">
       <PageHeader 
@@ -93,6 +93,16 @@ const Format = () => {
         subtitle="The premier competitive league in St. Louis. Merit-based advancement, weekly stakes, and a path to the championship."
         center
       />
+
+      {/* Philosophy */}
+      <div className="max-w-4xl mx-auto text-center">
+        <div className="bg-surface-highlight/50 p-8 rounded-2xl border border-border">
+          <h2 className="text-2xl font-bold text-text-main mb-4">The Philosophy</h2>
+          <p className="text-xl text-text-muted italic leading-relaxed">
+            "{rules.philosophy}"
+          </p>
+        </div>
+      </div>
         
       {/* Quick Info Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-8">
@@ -127,37 +137,183 @@ const Format = () => {
         </Card>
       </div>
 
-      {/* Prizes & Rewards */}
-      <div className="bg-gradient-to-br from-surface to-surface-highlight rounded-2xl p-8 md:p-12 text-text-main relative overflow-hidden border border-border">
-        <div className="absolute top-0 right-0 p-12 opacity-10">
-          <Trophy className="h-64 w-64" />
+      {/* Season Structure */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-text-main mb-4">Season Structure</h2>
+          <p className="text-text-muted max-w-2xl mx-auto">
+            {rules.seasonStructure.duration} • {rules.seasonStructure.when} • {rules.seasonStructure.rosterSize} Players
+          </p>
         </div>
-        <div className="relative z-10">
-          <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-warning" />
-            What You're Playing For
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10">
-              <h3 className="text-xl font-bold text-warning mb-2">Cash Prize</h3>
-              <p className="text-text-muted">
-                Compete for a cash pool awarded to the season champion.
-              </p>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <Card className="p-6 border-success/20 bg-success/5">
+            <h3 className="text-xl font-bold text-success mb-4 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              The Safe Zone
+            </h3>
+            <p className="text-text-main font-medium mb-2">Top 12 Players</p>
+            <p className="text-text-muted">
+              Safe. You are guaranteed a roster spot for the next season.
+            </p>
+          </Card>
+
+          <Card className="p-6 border-error/20 bg-error/5">
+            <h3 className="text-xl font-bold text-error mb-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              The Drop Zone
+            </h3>
+            <p className="text-text-main font-medium mb-2">Bottom 4 Players</p>
+            <p className="text-text-muted">
+              Relegated. You lose your roster spot immediately. To rejoin, you must register for the Open Qualifiers and earn your way back in against new applicants.
+            </p>
+          </Card>
+        </div>
+      </div>
+
+      {/* Prizes & Rewards */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-text-main mb-4">Prizes & Rewards</h2>
+          <p className="text-text-muted max-w-2xl mx-auto">
+            Top performers from each season earn court credits, club points, and guaranteed spots for the next season.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* 1st Place */}
+          <Card className="p-6 border-warning/50 bg-warning/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Trophy className="h-24 w-24 text-warning" />
             </div>
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10">
-              <h3 className="text-xl font-bold text-warning mb-2">Championship Points</h3>
-              <p className="text-text-muted">
-                Earn official Paddle Up Championship Points towards year-end rankings.
-              </p>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-warning text-surface p-2 rounded-lg">
+                  <Trophy className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-text-main">1st Place</h3>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2 text-text-main font-medium">
+                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
+                  $100 Court Credit
+                </li>
+                <li className="flex items-start gap-2 text-text-main font-medium">
+                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
+                  Free Entry Next Season
+                </li>
+                <li className="flex items-start gap-2 text-text-main font-medium">
+                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
+                  50 Paddle Up Club Points
+                </li>
+              </ul>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm p-6 rounded-xl border border-white/10">
-              <h3 className="text-xl font-bold text-warning mb-2">Guaranteed Spot</h3>
-              <p className="text-text-muted">
-                Top performers secure a guaranteed roster spot for the next season.
-              </p>
+          </Card>
+
+          {/* 2nd Place */}
+          <Card className="p-6 border-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <Trophy className="h-24 w-24 text-text-muted" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-surface-highlight text-text-muted p-2 rounded-lg border border-border">
+                  <span className="font-bold text-lg">2nd</span>
+                </div>
+                <h3 className="text-xl font-bold text-text-main">2nd Place</h3>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2 text-text-muted">
+                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                  $60 Court Credit
+                </li>
+                <li className="flex items-start gap-2 text-text-muted">
+                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                  30 Paddle Up Club Points
+                </li>
+              </ul>
+            </div>
+          </Card>
+
+          {/* 3rd Place */}
+          <Card className="p-6 border-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <Trophy className="h-24 w-24 text-text-muted" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-surface-highlight text-text-muted p-2 rounded-lg border border-border">
+                  <span className="font-bold text-lg">3rd</span>
+                </div>
+                <h3 className="text-xl font-bold text-text-main">3rd Place</h3>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2 text-text-muted">
+                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                  $40 Court Credit
+                </li>
+                <li className="flex items-start gap-2 text-text-muted">
+                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                  20 Paddle Up Club Points
+                </li>
+              </ul>
+            </div>
+          </Card>
+        </div>
+        
+        <div className="text-center">
+          <p className="text-sm text-text-muted italic">
+            *Paddle Up Club points are separate from league standings points.
+          </p>
+        </div>
+      </div>
+
+      {/* Pre-Season Qualifiers */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-text-main mb-4">Pre-Season Qualifiers</h2>
+          <p className="text-text-muted max-w-2xl mx-auto">
+            Before each season begins, we host two Open Qualifier events to fill the 4 open roster spots.
+          </p>
+        </div>
+
+        <Card className="max-w-4xl mx-auto p-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-bold text-text-main mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Who Can Play
+              </h3>
+              <ul className="space-y-2">
+                {rules.qualification.who.map((item, i) => (
+                  <li key={i} className="flex items-start text-text-muted">
+                    <span className="mr-2">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-text-main mb-4 flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Advancement
+              </h3>
+              <ul className="space-y-2">
+                {rules.qualification.advancement.map((item, i) => (
+                  <li key={i} className="flex items-start text-text-muted">
+                    <span className="mr-2">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-        </div>
+          <div className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-text-muted italic">
+              <span className="font-bold text-primary">Note:</span> {rules.qualification.note}
+            </p>
+          </div>
+        </Card>
       </div>
 
       {/* Seeding & Assignments */}

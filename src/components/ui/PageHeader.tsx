@@ -1,7 +1,15 @@
 import React from 'react';
 import { cn } from '../../lib/utils';
 
-const PageHeader = ({ title, subtitle, children, className, center = false }) => {
+interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  children?: React.ReactNode;
+  className?: string;
+  center?: boolean;
+}
+
+const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, children, className, center = false }) => {
   return (
     <div className={cn("space-y-4", center && "text-center", className)}>
       <div className={cn(

@@ -5,8 +5,8 @@ import { cn } from '../lib/utils';
 import MatchCalculator from '../components/calculator/MatchCalculator';
 import InitialAssignments from '../components/calculator/InitialAssignments';
 
-const Calculator = () => {
-  const [mode, setMode] = useState('calculator'); // 'calculator' | 'assignments'
+const Calculator: React.FC = () => {
+  const [mode, setMode] = useState<'calculator' | 'assignments'>('calculator');
 
   if (mode === 'assignments') {
     return <InitialAssignments onBack={() => setMode('calculator')} />;
@@ -15,12 +15,7 @@ const Calculator = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <PageHeader 
-        title={
-          <span className="flex items-center justify-center gap-3">
-            <CalcIcon className="h-8 w-8 text-primary" />
-            Court Calculator
-          </span>
-        }
+        title="Court Calculator"
         subtitle="Enter scores to calculate rankings and next court assignments."
         center
       >
@@ -39,7 +34,7 @@ const Calculator = () => {
               onClick={() => setMode('assignments')}
               className={cn(
                 "px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                mode === 'assignments' ? "bg-primary text-text-main shadow-sm" : "text-text-muted hover:text-text-main"
+                "text-text-muted hover:text-text-main"
               )}
             >
               Initial Assignments

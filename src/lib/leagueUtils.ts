@@ -1,44 +1,63 @@
 import { rules } from '../data/rules';
+import { Season, PlayerStats, AllTimeStats, Player } from '../types';
 
-export const calculateSeasonStats = (seasonData) => {
-  const playerStats = {};
+export const getPointsForRank = (rank: number): number => {
+  const { championship, court2, court3, court4 } = rules.points;
 
-  // Initialize stats for all players found in the season
-  // We'll discover players as we iterate, or we could pass a player list.
-  // For now, let's build it dynamically.
+  // Champ Court (1-4)
+  if (rank <= 4) return championship[rank] || 0;
+  
+  // Court 2 (5-8)
+  if (rank <= 8) return court2[rank - 4] || 0;
+
+  // Court 3 (9-12)
+  if (rank <= 12) return court3[rank - 8] || 0;
+
+  // Court 4 (13-16)
+  if (rank <= 16) return court4[rank - 12] || 0;
+
+  return 0;
+};
+
+export const calculateSeasonStats = (seasonData: Season): PlayerStats[] => {
+  const playerStats: Record<string, PlayerStats> = {};
+
+  if (!seasonData.weeks) return [];
 
   seasonData.weeks.forEach(week => {
     if (!week.isCompleted) return;
 
     // 1. Calculate League Points from Rankings
-    week.rankings.forEach((playerId, index) => {
-      if (!playerStats[playerId]) {
-        playerStats[playerId] = {
-          id: playerId,
-          points: 0,
-          wins: 0,
-          losses: 0,
-          pointsWon: 0,
-          pointsLost: 0,
-          diff: 0,
-          appearances: 0,
-          champCourt: 0,
-          weeklyRanks: [] // Track history
-        };
-      }
+    if (week.rankings) {
+      week.rankings.forEach((playerId, index) => {
+        if (!playerStats[playerId]) {
+          playerStats[playerId] = {
+            id: playerId,
+            points: 0,
+            wins: 0,
+            losses: 0,
+            pointsWon: 0,
+            pointsLost: 0,
+            diff: 0,
+            appearances: 0,
+            champCourt: 0,
+            weeklyRanks: []
+          };
+        }
 
-      const rank = index + 1;
-      const points = getPointsForRank(rank);
-      
-      playerStats[playerId].points += points;
-      playerStats[playerId].appearances += 1;
-      playerStats[playerId].weeklyRanks.push(rank);
+        const rank = index + 1;
+        const points = getPointsForRank(rank);
+        
+        playerStats[playerId].points += points;
+        playerStats[playerId].appearances += 1;
+        playerStats[playerId].weeklyRanks.push(rank);
 
-      // Champ Court Appearance: Top 4 finish implies they ended on Champ Court
-      if (rank <= 4) {
-        playerStats[playerId].champCourt += 1;
-      }
-    });
+        // Champ Court Appearance: Top 4 finish implies they ended on Champ Court
+        if (rank <= 4) {
+          playerStats[playerId].champCourt += 1;
+        }
+      });
+    }
 
     // 2. Calculate Wins/Losses/Diff from Matches
     if (week.matches) {
@@ -77,8 +96,8 @@ export const calculateSeasonStats = (seasonData) => {
   });
 };
 
-export const calculateAllTimeStats = (currentSeason, pastSeasons) => {
-  const allStats = {};
+export const calculateAllTimeStats = (currentSeason: Season, pastSeasons: Season[]): AllTimeStats[] => {
+  const allStats: Record<string, { points: number; seasons: number }> = {};
   
   // Process current season
   const currentStats = calculateSeasonStats(currentSeason);
@@ -90,11 +109,13 @@ export const calculateAllTimeStats = (currentSeason, pastSeasons) => {
 
   // Process past seasons
   pastSeasons.forEach(season => {
-    season.standings.forEach(p => {
-      if (!allStats[p.playerId]) allStats[p.playerId] = { points: 0, seasons: 0 };
-      allStats[p.playerId].points += p.points;
-      allStats[p.playerId].seasons += 1;
-    });
+    if (season.standings) {
+      season.standings.forEach(p => {
+        if (!allStats[p.playerId]) allStats[p.playerId] = { points: 0, seasons: 0 };
+        allStats[p.playerId].points += p.points;
+        allStats[p.playerId].seasons += 1;
+      });
+    }
   });
 
   return Object.entries(allStats)
@@ -107,9 +128,9 @@ export const calculateAllTimeStats = (currentSeason, pastSeasons) => {
     .map((stat, index) => ({ ...stat, rank: index + 1 }));
 };
 
-export const getNextCourt = (round, court, rank) => {
-  const rNum = parseInt(round);
-  const cNum = parseInt(court);
+export const getNextCourt = (round: number | string, court: number | string, rank: number): number | string => {
+  const rNum = typeof round === 'string' ? parseInt(round) : round;
+  const cNum = typeof court === 'string' ? parseInt(court) : court;
 
   if (rNum === 1) {
     // Round 1 Logic
@@ -139,7 +160,7 @@ export const getNextCourt = (round, court, rank) => {
   return "TBD";
 };
 
-export const generateSnakeDraw = (rankedPlayers) => {
+export const generateSnakeDraw = (rankedPlayers: Player[]): { id: number; name: string; indices: number[]; players: (Player & { seed: number })[] }[] => {
   // Snake Draw Logic
   // Court 1: 1, 8, 9, 16 (Indices: 0, 7, 8, 15)
   // Court 2: 2, 7, 10, 15 (Indices: 1, 6, 9, 14)
@@ -160,22 +181,4 @@ export const generateSnakeDraw = (rankedPlayers) => {
       .filter(Boolean) // Handle case where < 16 players selected
       .map((p, i) => ({ ...p, seed: court.indices[i] + 1 }))
   }));
-};
-
-export const getPointsForRank = (rank) => {
-  const { championship, court2, court3, court4 } = rules.points;
-
-  // Champ Court (1-4)
-  if (rank <= 4) return championship[rank] || 0;
-  
-  // Court 2 (5-8)
-  if (rank <= 8) return court2[rank - 4] || 0;
-
-  // Court 3 (9-12)
-  if (rank <= 12) return court3[rank - 8] || 0;
-
-  // Court 4 (13-16)
-  if (rank <= 16) return court4[rank - 12] || 0;
-
-  return 0;
 };

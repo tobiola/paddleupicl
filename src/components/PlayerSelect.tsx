@@ -3,14 +3,20 @@ import { Search, ChevronDown } from 'lucide-react';
 import { players as allPlayers } from '../data/leagueData';
 import PlayerAvatar from './ui/PlayerAvatar';
 
-const PlayerSelect = ({ value, onChange, placeholder }) => {
+interface PlayerSelectProps {
+  value: string;
+  onChange: (name: string) => void;
+  placeholder?: string;
+}
+
+const PlayerSelect: React.FC<PlayerSelectProps> = ({ value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const wrapperRef = useRef(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -22,7 +28,7 @@ const PlayerSelect = ({ value, onChange, placeholder }) => {
     p.name.toLowerCase().includes((searchTerm || value).toLowerCase())
   );
 
-  const handleSelect = (name) => {
+  const handleSelect = (name: string) => {
     onChange(name);
     setIsOpen(false);
     setSearchTerm('');

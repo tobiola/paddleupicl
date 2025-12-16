@@ -1,8 +1,8 @@
 import React from 'react';
 import { Medal } from 'lucide-react';
-import { rules } from '../data/leagueData';
+import { rules } from '../data/rules';
 
-const WeeklyPoints = () => {
+const WeeklyPoints: React.FC = () => {
   const { points } = rules;
 
   const courts = [

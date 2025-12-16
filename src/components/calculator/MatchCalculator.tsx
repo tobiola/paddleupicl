@@ -7,38 +7,54 @@ import Card from '../ui/Card';
 import RankBadge from '../ui/RankBadge';
 import PlayerSelect from '../PlayerSelect';
 
-const MatchCalculator = () => {
-  const [round, setRound] = useState(1);
-  const [court, setCourt] = useState(1);
+interface PlayerState {
+  id: number;
+  name: string;
+  wins: number;
+  points: number;
+  diff: number;
+  rank?: number;
+  nextCourt?: number | string;
+  pointsDisplay?: string | null;
+}
+
+interface ScoreState {
+  t1: string;
+  t2: string;
+}
+
+const MatchCalculator: React.FC = () => {
+  const [round, setRound] = useState<number | string>(1);
+  const [court, setCourt] = useState<number | string>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
-  const [players, setPlayers] = useState([
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
+  const [players, setPlayers] = useState<PlayerState[]>([
     { id: 1, name: '', wins: 0, points: 0, diff: 0 },
     { id: 2, name: '', wins: 0, points: 0, diff: 0 },
     { id: 3, name: '', wins: 0, points: 0, diff: 0 },
     { id: 4, name: '', wins: 0, points: 0, diff: 0 },
   ]);
   
-  const [scores, setScores] = useState([
+  const [scores, setScores] = useState<ScoreState[]>([
     { t1: '', t2: '' },
     { t1: '', t2: '' },
     { t1: '', t2: '' },
   ]);
 
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState<PlayerState[] | null>(null);
 
-  const handleScoreChange = (gameIdx, team, value) => {
+  const handleScoreChange = (gameIdx: number, team: 't1' | 't2', value: string) => {
     const newScores = [...scores];
     newScores[gameIdx][team] = value;
     setScores(newScores);
   };
 
-  const handlePlayerNameChange = (id, name) => {
+  const handlePlayerNameChange = (id: number, name: string) => {
     const newPlayers = players.map(p => p.id === id ? { ...p, name } : p);
     setPlayers(newPlayers);
   };
 
-  const getName = (id) => {
+  const getName = (id: number) => {
     const player = players.find(p => p.id === id);
     return player?.name || `P${id}`;
   };
@@ -48,13 +64,13 @@ const MatchCalculator = () => {
     let currentPlayers = players.map(p => ({ ...p, wins: 0, points: 0, diff: 0 }));
 
     // Helper to update stats
-    const updateStats = (pId, scored, allowed) => {
+    const updateStats = (pId: number, scored: string, allowed: string) => {
       const pIndex = currentPlayers.findIndex(p => p.id === pId);
       if (pIndex === -1) return;
       
-      currentPlayers[pIndex].points += parseInt(scored || 0);
-      currentPlayers[pIndex].diff += (parseInt(scored || 0) - parseInt(allowed || 0));
-      if (parseInt(scored || 0) > parseInt(allowed || 0)) {
+      currentPlayers[pIndex].points += parseInt(scored || '0');
+      currentPlayers[pIndex].diff += (parseInt(scored || '0') - parseInt(allowed || '0'));
+      if (parseInt(scored || '0') > parseInt(allowed || '0')) {
         currentPlayers[pIndex].wins += 1;
       }
     };
@@ -91,8 +107,8 @@ const MatchCalculator = () => {
       let pointsDisplay = null;
       
       // Only calculate points for Round 3
-      if (parseInt(round) === 3) {
-        const cNum = parseInt(court);
+      if (parseInt(round as string) === 3) {
+        const cNum = parseInt(court as string);
         let points = 0;
         if (cNum === 1) points = rules.points.championship[rank];
         else if (cNum === 2) points = rules.points.court2[rank];
@@ -140,18 +156,18 @@ const MatchCalculator = () => {
     message += `\n\n--- JSON Data for leagueData.js ---\n`;
     
     // Helper to get real player ID from name
-    const getRealId = (name) => {
+    const getRealId = (name: string) => {
       const found = allPlayers.find(p => p.name === name);
       return found ? `"${found.id}"` : `"${name}"`;
     };
 
-    if (parseInt(round) === 3) {
+    if (parseInt(round as string) === 3) {
       // Rankings for Round 3
       const rankings = results.map(p => getRealId(p.name));
       message += `// Court ${court}\nrankings: [\n  ${rankings.join(', ')}\n]`;
     } else {
       // Matches for Round 1 & 2
-      const getPId = (id) => {
+      const getPId = (id: number) => {
         const p = players.find(p => p.id === id);
         return getRealId(p?.name || `Player ${id}`);
       };
@@ -376,7 +392,7 @@ const MatchCalculator = () => {
             {results.map((p) => (
               <div key={p.id} className="flex items-center justify-between bg-surface-highlight p-3 rounded-lg border border-border">
                 <div className="flex items-center gap-3">
-                  <RankBadge rank={p.rank} size="sm" />
+                  <RankBadge rank={p.rank!} size="sm" />
                   <div>
                     <p className="font-bold">{p.name || `Player ${p.id}`}</p>
                     <p className="text-xs text-text-muted">
@@ -385,7 +401,7 @@ const MatchCalculator = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  {round == 3 ? (
+                  {parseInt(round as string) === 3 ? (
                     <>
                       <p className="text-xs text-text-muted uppercase">Earned</p>
                       <p className="text-lg font-bold text-success">{p.pointsDisplay}</p>
@@ -393,9 +409,9 @@ const MatchCalculator = () => {
                   ) : (
                     <>
                       <p className="text-xs text-text-muted uppercase">
-                        {round == 1 ? (
-                          [1, 2].includes(p.nextCourt) ? "Upper Bracket" : "Lower Bracket"
-                        ) : round == 2 ? (
+                        {parseInt(round as string) === 1 ? (
+                          [1, 2].includes(p.nextCourt as number) ? "Upper Bracket" : "Lower Bracket"
+                        ) : parseInt(round as string) === 2 ? (
                           p.nextCourt === 1 ? "Championship Court" : "Go To"
                         ) : "Go To"}
                       </p>

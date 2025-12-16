@@ -1,8 +1,9 @@
 import playersData from './players.json';
+import { Player, Season } from '../types';
 
-export const players = playersData;
+export const players: Player[] = playersData as Player[];
 
-export const pastSeasons = [
+export const pastSeasons: Season[] = [
   {
     season: "Season 0",
     date: "Oct - Nov 2023",
@@ -25,7 +26,7 @@ export const pastSeasons = [
   }
 ];
 
-export const seasonData = {
+export const seasonData: Season = {
   season: "Season 2",
   lastUpdated: "2024-02-18",
   weeks: [

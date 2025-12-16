@@ -5,10 +5,19 @@ import { calculateSeasonStats, generateSnakeDraw } from '../../lib/leagueUtils';
 import Card from '../ui/Card';
 import PageHeader from '../ui/PageHeader';
 import { cn } from '../../lib/utils';
+import { Player } from '../../types';
 
-const InitialAssignments = ({ onBack }) => {
-  const [selectedPlayers, setSelectedPlayers] = useState(new Set());
-  const [assignments, setAssignments] = useState(null);
+interface InitialAssignmentsProps {
+  onBack: () => void;
+}
+
+interface PlayerWithStats extends Player {
+  points: number;
+}
+
+const InitialAssignments: React.FC<InitialAssignmentsProps> = ({ onBack }) => {
+  const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set());
+  const [assignments, setAssignments] = useState<ReturnType<typeof generateSnakeDraw> | null>(null);
 
   // Get all players with their current season stats
   const playerStats = useMemo(() => {
@@ -22,12 +31,12 @@ const InitialAssignments = ({ onBack }) => {
     })).sort((a, b) => {
       // Sort by Points (Desc), then DUPR (Desc), then Name (Asc)
       if (b.points !== a.points) return b.points - a.points;
-      if (b.dupr !== a.dupr) return b.dupr - a.dupr;
+      if (b.dupr !== a.dupr) return (b.dupr || 0) - (a.dupr || 0);
       return a.name.localeCompare(b.name);
     });
   }, []);
 
-  const togglePlayer = (id) => {
+  const togglePlayer = (id: string) => {
     const newSelected = new Set(selectedPlayers);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -45,7 +54,7 @@ const InitialAssignments = ({ onBack }) => {
       .filter(p => selectedPlayers.has(p.id))
       .sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
-        if (b.dupr !== a.dupr) return b.dupr - a.dupr;
+        if (b.dupr !== a.dupr) return (b.dupr || 0) - (a.dupr || 0);
         return a.name.localeCompare(b.name);
       });
 
@@ -56,12 +65,7 @@ const InitialAssignments = ({ onBack }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <PageHeader 
-        title={
-          <span className="flex items-center justify-center gap-3">
-            <Grid className="h-8 w-8 text-primary" />
-            Initial Assignments
-          </span>
-        }
+        title="Initial Assignments"
         subtitle="Select players to generate court assignments based on season rankings."
         center
       >
@@ -161,7 +165,7 @@ const InitialAssignments = ({ onBack }) => {
                           <span className="text-xs font-mono text-text-muted w-6">#{p.seed}</span>
                           <span className="font-medium">{p.name}</span>
                         </div>
-                        <span className="text-xs text-text-muted">{p.points} pts</span>
+                        <span className="text-xs text-text-muted">{(p as unknown as PlayerWithStats).points} pts</span>
                       </div>
                     ))}
                     {court.players.length === 0 && (

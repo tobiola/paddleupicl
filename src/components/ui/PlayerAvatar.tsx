@@ -2,7 +2,15 @@ import React from 'react';
 import { User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-const PlayerAvatar = ({ url, name, size = 'md', className, border = true }) => {
+interface PlayerAvatarProps {
+  url?: string;
+  name?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  border?: boolean;
+}
+
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ url, name, size = 'md', className, border = true }) => {
   const sizeClasses = {
     sm: 'h-6 w-6 text-xs',
     md: 'h-8 w-8 text-xs',

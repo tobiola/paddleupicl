@@ -7,7 +7,7 @@ import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import PageHeader from '../components/ui/PageHeader';
 
-const Champions = () => {
+const Champions: React.FC = () => {
   return (
     <div className="space-y-12">
       <PageHeader 
@@ -20,7 +20,7 @@ const Champions = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {pastSeasons.map((season, index) => {
             // Sort standings by points
-            const sortedStandings = [...season.standings].sort((a, b) => b.points - a.points);
+            const sortedStandings = [...(season.standings || [])].sort((a, b) => b.points - a.points);
             const top3 = sortedStandings.slice(0, 3);
 
             return (

@@ -8,13 +8,15 @@ import Champions from './pages/Champions';
 import Players from './pages/Players';
 import PlayerProfile from './pages/PlayerProfile';
 import Calculator from './pages/Calculator';
+import Schedule from './pages/Schedule';
 
-function App() {
+const App: React.FC = () => {
   return (
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/standings" element={<Standings />} />
+        <Route path="/schedule" element={<Schedule />} />
         <Route path="/players" element={<Players />} />
         <Route path="/player/:id" element={<PlayerProfile />} />
         <Route path="/format" element={<Format />} />

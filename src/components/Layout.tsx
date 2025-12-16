@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Trophy, Users, Calendar, FileText, Home, Calculator } from 'lucide-react';
+import { Menu, X, Trophy, Users, Calendar, Home, Calculator } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const Layout = ({ children }) => {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Standings', href: '/standings', icon: Trophy },
+    { name: 'Schedule', href: '/schedule', icon: Calendar },
     { name: 'Calculator', href: '/calculator', icon: Calculator },
     { name: 'Players', href: '/players', icon: Users },
-    { name: 'Format & Rules', href: '/format', icon: Calendar },
+    { name: 'Format', href: '/format', icon: Calendar },
     { name: 'Champions', href: '/champions', icon: Trophy },
   ];
 
