@@ -1,0 +1,88 @@
+[
+  {
+    "id": "bekahola",
+    "name": "Bekah Ola",
+    "url": "/images/players/bekahola.jpg",
+    "dupr": 3.844
+  },
+  {
+    "id": "tobiola",
+    "name": "Tobi Ola",
+    "url": "/images/players/tobiola.jpg"
+  },
+  {
+    "id": "playertwo",
+    "name": "Player Two",
+    "url": ""
+  },
+  {
+    "id": "playerthree",
+    "name": "Player Three",
+    "url": ""
+  },
+  {
+    "id": "playerfour",
+    "name": "Player Four",
+    "url": ""
+  },
+  {
+    "id": "alexrivera",
+    "name": "Alex Rivera",
+    "url": ""
+  },
+  {
+    "id": "jordansmith",
+    "name": "Jordan Smith",
+    "url": ""
+  },
+  {
+    "id": "caseyjohnson",
+    "name": "Casey Johnson",
+    "url": ""
+  },
+  {
+    "id": "taylorwilson",
+    "name": "Taylor Wilson",
+    "url": ""
+  },
+  {
+    "id": "morganlee",
+    "name": "Morgan Lee",
+    "url": ""
+  },
+  {
+    "id": "rileybrown",
+    "name": "Riley Brown",
+    "url": ""
+  },
+  {
+    "id": "jamiedavis",
+    "name": "Jamie Davis",
+    "url": ""
+  },
+  {
+    "id": "quinnmiller",
+    "name": "Quinn Miller",
+    "url": ""
+  },
+  {
+    "id": "averymoore",
+    "name": "Avery Moore",
+    "url": ""
+  },
+  {
+    "id": "drewtaylor",
+    "name": "Drew Taylor",
+    "url": ""
+  },
+  {
+    "id": "reeseanderson",
+    "name": "Reese Anderson",
+    "url": ""
+  },
+  {
+    "id": "skylerthomas",
+    "name": "Skyler Thomas",
+    "url": ""
+  }
+]
