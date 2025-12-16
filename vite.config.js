@@ -8,5 +8,5 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: './', // Important for GitHub Pages deployment
+  base: '/paddleupicl/', // Important for GitHub Pages deployment
 })
