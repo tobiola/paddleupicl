@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { rules } from '../data/rules';
-import { Trophy, Users, ArrowDown, ArrowUp, CheckCircle, AlertCircle, MapPin, Clock, DollarSign, ExternalLink, User, Send, MessageSquare } from 'lucide-react';
+import {
+  Trophy,
+  Users,
+  ArrowDown,
+  ArrowUp,
+  CheckCircle,
+  AlertCircle,
+  MapPin,
+  Clock,
+  DollarSign,
+  ExternalLink,
+  User,
+  Send,
+  MessageSquare
+} from 'lucide-react';
 import WeeklyPoints from '../components/WeeklyPoints';
 import Card from '../components/ui/Card';
 import PageHeader from '../components/ui/PageHeader';
@@ -16,12 +30,12 @@ const ContactForm: React.FC = () => {
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch("https://formspree.io/f/xanrzonk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('https://formspree.io/f/xanrzonk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          subject: "League Question (Format Page)"
+          subject: 'League Question (Format Page)'
         })
       });
 
@@ -44,7 +58,9 @@ const ContactForm: React.FC = () => {
         <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
         <h3 className="text-lg font-bold text-success mb-2">Message Sent!</h3>
         <p className="text-success">We'll get back to you shortly.</p>
-        <button onClick={() => setStatus(null)} className="mt-4 text-sm text-success hover:underline">Send another</button>
+        <button onClick={() => setStatus(null)} className="mt-4 text-sm text-success hover:underline">
+          Send another
+        </button>
       </div>
     );
   }
@@ -52,7 +68,9 @@ const ContactForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-text-muted mb-1">Your Email</label>
+        <label htmlFor="email" className="block text-sm font-medium text-text-muted mb-1">
+          Your Email
+        </label>
         <input
           type="email"
           name="email"
@@ -62,7 +80,9 @@ const ContactForm: React.FC = () => {
         />
       </div>
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-text-muted mb-1">Question</label>
+        <label htmlFor="message" className="block text-sm font-medium text-text-muted mb-1">
+          Question
+        </label>
         <textarea
           name="message"
           required
@@ -78,62 +98,65 @@ const ContactForm: React.FC = () => {
       >
         {isSubmitting ? 'Sending...' : <><Send className="h-4 w-4" /> Send Message</>}
       </button>
-      {status === 'error' && (
-        <p className="text-error text-sm text-center">Something went wrong. Please try again.</p>
-      )}
+      {status === 'error' && <p className="text-error text-sm text-center">Something went wrong. Please try again.</p>}
     </form>
   );
 };
 
+
 const Format: React.FC = () => {
   return (
     <div className="space-y-16 pb-12">
-      <PageHeader 
-        title="Paddle Up Individual Championship League" 
-        subtitle="The premier competitive league in St. Louis. Merit-based advancement, weekly stakes, and a path to the championship."
-        center
-      />
+      <PageHeader title={rules.title} subtitle={rules.subtitle} center />
 
       {/* Philosophy */}
       <div className="max-w-4xl mx-auto text-center">
         <div className="bg-surface-highlight/50 p-8 rounded-2xl border border-border">
           <h2 className="text-2xl font-bold text-text-main mb-4">The Philosophy</h2>
-          <p className="text-xl text-text-muted italic leading-relaxed">
-            "{rules.philosophy}"
-          </p>
+          <p className="text-xl text-text-muted italic leading-relaxed">"{rules.philosophy}"</p>
         </div>
       </div>
-        
+
       {/* Quick Info Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-8">
         <Card className="p-4 flex flex-col items-center justify-center text-center">
           <Clock className="h-6 w-6 text-primary mb-2" />
-          <span className="font-bold text-text-main">Sundays</span>
-          <span className="text-sm text-text-muted">7:00 - 9:00 PM</span>
+          <span className="font-bold text-text-main">{rules.schedule.day}</span>
+          <span className="text-sm text-text-muted">{rules.schedule.time}</span>
         </Card>
-        <a 
-          href="https://maps.app.goo.gl/dKNY9dnEDiFdM3XK8" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="block group"
-        >
+
+        <a href={rules.location.url} target="_blank" rel="noopener noreferrer" className="block group">
           <Card className="p-4 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors h-full">
             <MapPin className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-text-main">Paddle Up</span>
+            <span className="font-bold text-text-main">{rules.location.name}</span>
             <span className="text-sm text-text-muted flex items-center gap-1">
-              Chesterfield <ExternalLink className="h-3 w-3" />
+              {rules.location.city} <ExternalLink className="h-3 w-3" />
             </span>
           </Card>
         </a>
+
         <Card className="p-4 flex flex-col items-center justify-center text-center">
           <DollarSign className="h-6 w-6 text-primary mb-2" />
-          <span className="font-bold text-text-main">$160</span>
-          <span className="text-sm text-text-muted">6 Week Season</span>
+          <span className="font-bold text-text-main">{rules.fee}</span>
+          <span className="text-sm text-text-muted">{rules.seasonStructure.duration}</span>
         </Card>
+
         <Card className="p-4 flex flex-col items-center justify-center text-center">
           <User className="h-6 w-6 text-primary mb-2" />
-          <span className="font-bold text-text-main">Individual</span>
-          <span className="text-sm text-text-muted">No Partner Needed</span>
+          <span className="font-bold text-text-main">{rules.participant.type}</span>
+          <span className="text-sm text-text-muted">{rules.participant.note}</span>
+        </Card>
+      </div>
+
+      {/* Scoring */}
+      <div className="max-w-4xl mx-auto mt-6">
+        <Card className="p-4">
+          <h3 className="font-bold text-text-main mb-2">Scoring</h3>
+          <ul className="text-text-muted list-disc pl-5 space-y-1">
+            {rules.scoring.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
         </Card>
       </div>
 
@@ -152,10 +175,10 @@ const Format: React.FC = () => {
               <CheckCircle className="h-5 w-5" />
               The Safe Zone
             </h3>
-            <p className="text-text-main font-medium mb-2">Top 12 Players</p>
-            <p className="text-text-muted">
-              Safe. You are guaranteed a roster spot for the next season.
+            <p className="text-text-main font-medium mb-2">
+              {`Top ${Math.max(0, Number(rules.seasonStructure.rosterSize) - 4)} Players`}
             </p>
+            <p className="text-text-muted">{rules.seasonStructure.safeZone}</p>
           </Card>
 
           <Card className="p-6 border-error/20 bg-error/5">
@@ -164,9 +187,7 @@ const Format: React.FC = () => {
               The Drop Zone
             </h3>
             <p className="text-text-main font-medium mb-2">Bottom 4 Players</p>
-            <p className="text-text-muted">
-              Relegated. You lose your roster spot immediately. To rejoin, you must register for the Open Qualifiers and earn your way back in against new applicants.
-            </p>
+            <p className="text-text-muted">{rules.seasonStructure.dropZone}</p>
           </Card>
         </div>
       </div>
@@ -175,96 +196,79 @@ const Format: React.FC = () => {
       <div className="space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-text-main mb-4">Prizes & Rewards</h2>
-          <p className="text-text-muted max-w-2xl mx-auto">
-            Top performers from each season earn court credits, club points, and guaranteed spots for the next season.
-          </p>
+          <p className="text-text-muted max-w-2xl mx-auto">Top performers from each season earn court credits, club points, and guaranteed spots for the next season.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* 1st Place */}
-          <Card className="p-6 border-warning/50 bg-warning/10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Card className='p-6 border-warning/50 bg-warning/10 relative overflow-hidden'>
+            <div className='absolute top-0 right-0 p-4 opacity-10'>
               <Trophy className="h-24 w-24 text-warning" />
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
-                <div className="bg-warning text-surface p-2 rounded-lg">
-                  <Trophy className="h-6 w-6" />
+                <div className="bg-surface-highlight text-text-muted p-2 rounded-lg border border-border">
+                  <span className="font-bold text-lg">{rules.rewards.firstPlace.name}</span>
                 </div>
-                <h3 className="text-xl font-bold text-text-main">1st Place</h3>
+                <h3 className="text-xl font-bold text-text-main">{`${rules.rewards.firstPlace.name} Place`}</h3>
               </div>
               <ul className="space-y-3">
-                <li className="flex items-start gap-2 text-text-main font-medium">
-                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
-                  $100 Court Credit
-                </li>
-                <li className="flex items-start gap-2 text-text-main font-medium">
-                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
-                  Free Entry Next Season
-                </li>
-                <li className="flex items-start gap-2 text-text-main font-medium">
-                  <CheckCircle className="h-5 w-5 text-warning shrink-0" />
-                  50 Paddle Up Club Points
-                </li>
+                {rules.rewards.firstPlace.items.map((it, i) => (
+                  <li key={i} className="flex items-start gap-2 text-text-main font-medium">
+                    <CheckCircle className="h-5 w-5 text-warning shrink-0" />
+                    {it}
+                  </li>
+                ))}
               </ul>
             </div>
           </Card>
 
-          {/* 2nd Place */}
-          <Card className="p-6 border-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Trophy className="h-24 w-24 text-text-muted" />
+          <Card className='p-6 border-border relative overflow-hidden'>
+            <div className='absolute top-0 right-0 p-4 opacity-5'>
+              <Trophy className="h-24 w-24 text-warning" />
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-surface-highlight text-text-muted p-2 rounded-lg border border-border">
-                  <span className="font-bold text-lg">2nd</span>
+                  <span className="font-bold text-lg">{rules.rewards.secondPlace.name}</span>
                 </div>
-                <h3 className="text-xl font-bold text-text-main">2nd Place</h3>
+                <h3 className="text-xl font-bold text-text-main">{`${rules.rewards.secondPlace.name} Place`}</h3>
               </div>
               <ul className="space-y-3">
-                <li className="flex items-start gap-2 text-text-muted">
-                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
-                  $60 Court Credit
-                </li>
-                <li className="flex items-start gap-2 text-text-muted">
-                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
-                  30 Paddle Up Club Points
-                </li>
+                {rules.rewards.secondPlace.items.map((it, i) => (
+                  <li key={i} className="flex items-start gap-2 text-text-muted">
+                    <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                    {it}
+                  </li>
+                ))}
               </ul>
             </div>
           </Card>
 
-          {/* 3rd Place */}
-          <Card className="p-6 border-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Trophy className="h-24 w-24 text-text-muted" />
+          <Card className='p-6 border-border relative overflow-hidden'>
+            <div className='absolute top-0 right-0 p-4 opacity-5'>
+              <Trophy className="h-24 w-24 text-warning" />
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-surface-highlight text-text-muted p-2 rounded-lg border border-border">
-                  <span className="font-bold text-lg">3rd</span>
+                  <span className="font-bold text-lg">{rules.rewards.thirdPlace.name}</span>
                 </div>
-                <h3 className="text-xl font-bold text-text-main">3rd Place</h3>
+                <h3 className="text-xl font-bold text-text-main">{`${rules.rewards.thirdPlace.name} Place`}</h3>
               </div>
               <ul className="space-y-3">
-                <li className="flex items-start gap-2 text-text-muted">
-                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
-                  $40 Court Credit
-                </li>
-                <li className="flex items-start gap-2 text-text-muted">
-                  <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
-                  20 Paddle Up Club Points
-                </li>
+                {rules.rewards.thirdPlace.items.map((it, i) => (
+                  <li key={i} className="flex items-start gap-2 text-text-muted">
+                    <CheckCircle className="h-5 w-5 text-text-muted shrink-0" />
+                    {it}
+                  </li>
+                ))}
               </ul>
             </div>
           </Card>
         </div>
-        
+
         <div className="text-center">
-          <p className="text-sm text-text-muted italic">
-            *Paddle Up Club points are separate from league standings points.
-          </p>
+          <p className="text-sm text-text-muted italic">{rules.rewards.notes}</p>
         </div>
       </div>
 
@@ -272,9 +276,7 @@ const Format: React.FC = () => {
       <div className="space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-text-main mb-4">Pre-Season Qualifiers</h2>
-          <p className="text-text-muted max-w-2xl mx-auto">
-            Before each season begins, we host two Open Qualifier events to fill the 4 open roster spots.
-          </p>
+          <p className="text-text-muted max-w-2xl mx-auto">Before each season begins, we host two Open Qualifier events to fill the open roster spots.</p>
         </div>
 
         <Card className="max-w-4xl mx-auto p-8">
@@ -310,7 +312,7 @@ const Format: React.FC = () => {
           </div>
           <div className="mt-8 pt-6 border-t border-border text-center">
             <p className="text-text-muted italic">
-              <span className="font-bold text-primary">Note:</span> {rules.qualification.note}
+              <span className="font-bold text-primary">Note:</span> {rules.qualification?.note}
             </p>
           </div>
         </Card>
@@ -320,9 +322,7 @@ const Format: React.FC = () => {
       <div className="space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-text-main mb-4">Seeding & Assignments</h2>
-          <p className="text-text-muted max-w-2xl mx-auto">
-            Your season performance determines your starting position each week.
-          </p>
+          <p className="text-text-muted max-w-2xl mx-auto">{rules.seeding?.overview}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -331,13 +331,11 @@ const Format: React.FC = () => {
               <Users className="h-5 w-5 text-primary" />
               Initial Seeding
             </h3>
-            <p className="text-text-muted mb-4">
-              Players are ranked 1-16 based on their current season points. In Week 1, DUPR ratings are used.
-            </p>
+            <p className="text-text-muted mb-4">{rules.seeding?.week1}</p>
             <div className="bg-surface-highlight p-4 rounded-lg border border-border">
               <h4 className="font-bold text-sm text-text-main mb-2">Why Seeding Matters</h4>
               <p className="text-sm text-text-muted">
-                Higher seeds are placed in groups with lower-seeded opponents in Round 1. This gives top players a statistical advantage to finish Top 2 and advance to the Upper Bracket immediately.
+                Higher seeds are placed in groups with lower-seeded opponents in Round 1, giving top players a statistical advantage to finish Top 2 and advance.
               </p>
             </div>
           </Card>
@@ -347,9 +345,7 @@ const Format: React.FC = () => {
               <MapPin className="h-5 w-5 text-primary" />
               The Snake Draw
             </h3>
-            <p className="text-text-muted mb-4">
-              We use a balanced "Snake Draw" to assign the initial 4 courts. This ensures fair competition across the league.
-            </p>
+            <p className="text-text-muted mb-4">{rules.seeding?.draw}</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="bg-surface-highlight p-2 rounded border border-border">
                 <span className="font-bold block text-primary">Court 1</span>
@@ -376,113 +372,49 @@ const Format: React.FC = () => {
       <div className="space-y-12">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-text-main mb-4">The Nightly Format</h2>
-          <p className="text-text-muted max-w-2xl mx-auto">
-            Three rounds of intense play. Perform well to move up; struggle and you move down.
-          </p>
+          <p className="text-text-muted max-w-2xl mx-auto">Three rounds of intense play. Perform well to move up; struggle and you move down.</p>
         </div>
 
         <div className="relative">
-          {/* Connecting Line */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -z-10 transform -translate-x-1/2"></div>
 
           <div className="space-y-12">
-            {/* Round 1 */}
-            <div className="relative">
-              <Card className="p-8 max-w-3xl mx-auto">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-text-main px-4 py-1 rounded-full text-sm font-bold">
-                  ROUND 1
-                </div>
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="bg-primary-light p-4 rounded-full">
-                    <Users className="h-8 w-8 text-primary" />
+            {rules.format?.map((round, idx) => (
+              <div key={idx} className="relative">
+                <Card className="p-8 max-w-3xl mx-auto">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-text-main px-4 py-1 rounded-full text-sm font-bold">
+                    {`ROUND ${idx + 1}`}
                   </div>
-                  <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[0].title}</h3>
-                    <div className="text-text-muted text-left">
-                      {Array.isArray(rules.format[0].description) ? (
-                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
-                          {rules.format[0].description.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{rules.format[0].description}</p>
-                      )}
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="bg-primary-light p-4 rounded-full">
+                      {idx === 0 ? <Users className="h-8 w-8 text-primary" /> : idx === 1 ? <ArrowUp className="h-8 w-8 text-primary" /> : <Trophy className="h-8 w-8 text-warning" />}
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="text-xl font-bold text-text-main mb-2">{round.title}</h3>
+                      <div className="text-text-muted text-left">
+                        {Array.isArray(round.description) ? (
+                          <ul className="list-disc pl-5 space-y-1 inline-block text-left">
+                            {round.description.map((item, i) => (
+                              <li key={i}>{item}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>{round.description}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            </div>
+                </Card>
 
-            {/* Transition 1 */}
-            <div className="flex justify-center">
-              <div className="bg-surface p-2 rounded-full border border-border shadow-sm">
-                <ArrowDown className="h-6 w-6 text-text-muted" />
+                {idx < rules.format.length - 1 && (
+                  <div className="flex justify-center">
+                    <div className="bg-surface p-2 rounded-full border border-border shadow-sm">
+                      <ArrowDown className="h-6 w-6 text-text-muted" />
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Round 2 */}
-            <div className="relative">
-              <Card className="p-8 max-w-3xl mx-auto">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary text-text-main px-4 py-1 rounded-full text-sm font-bold">
-                  ROUND 2
-                </div>
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="bg-primary-light p-4 rounded-full">
-                    <ArrowUp className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[1].title}</h3>
-                    <div className="text-text-muted text-left">
-                      {Array.isArray(rules.format[1].description) ? (
-                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
-                          {rules.format[1].description.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{rules.format[1].description}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Transition 2 */}
-            <div className="flex justify-center">
-              <div className="bg-surface p-2 rounded-full border border-border shadow-sm">
-                <ArrowDown className="h-6 w-6 text-text-muted" />
-              </div>
-            </div>
-
-            {/* Round 3 */}
-            <div className="relative">
-              <Card className="p-8 max-w-3xl mx-auto border-warning/50 bg-warning/10">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-warning text-surface px-4 py-1 rounded-full text-sm font-bold shadow-sm">
-                  ROUND 3
-                </div>
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="bg-warning/20 p-4 rounded-full">
-                    <Trophy className="h-8 w-8 text-warning" />
-                  </div>
-                  <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold text-text-main mb-2">{rules.format[2].title}</h3>
-                    <div className="text-text-muted text-left mb-4">
-                      {Array.isArray(rules.format[2].description) ? (
-                        <ul className="list-disc pl-5 space-y-1 inline-block text-left">
-                          {rules.format[2].description.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>{rules.format[2].description}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -490,26 +422,23 @@ const Format: React.FC = () => {
       {/* Weekly Points */}
       <div className="max-w-4xl mx-auto">
         <WeeklyPoints />
-        <p className="text-center text-sm text-text-muted mt-4 italic">Missed week = 0 points</p>
+        <p className="text-center text-sm text-text-muted mt-4 italic">{rules.missedWeekNote}</p>
       </div>
 
       {/* How to Join */}
       <div className="bg-primary-light rounded-2xl p-8 md:p-12 text-center border border-primary/50">
         <h2 className="text-3xl font-bold text-text-main mb-4">Ready to Compete?</h2>
-        <p className="text-xl text-text-muted mb-8 max-w-2xl mx-auto">
-          Registration is open for the upcoming season. Secure your spot now.
-        </p>
+        <p className="text-xl text-text-muted mb-8 max-w-2xl mx-auto">Registration is open for the upcoming season. Secure your spot now.</p>
         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-          <a 
-            href="#" 
+          <a
+            href={rules.register.url}
             className="bg-primary text-text-main px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20 flex items-center gap-2"
           >
-            Register on CourtReserve <ExternalLink className="h-5 w-5" />
+            {rules.register.text}
+            <ExternalLink className="h-5 w-5" />
           </a>
         </div>
-        <p className="text-sm text-text-muted mt-6">
-          *Future seasons may require participation in qualifying nights to earn a roster spot.
-        </p>
+        <p className="text-sm text-text-muted mt-6">*Future seasons may require participation in qualifying nights to earn a roster spot.</p>
       </div>
 
       {/* Rules & Policies Grid */}
@@ -554,27 +483,19 @@ const Format: React.FC = () => {
           <div className="space-y-4">
             <Card>
               <h3 className="font-bold text-text-main mb-2">What happens if I miss a week?</h3>
-              <p className="text-text-muted">
-                If you miss a week, you receive 0 points for that night. You must notify the league admin so a substitute can be assigned. You are allowed a maximum of 2 sub replacements per season.
-              </p>
+              <p className="text-text-muted">If you miss a week, you receive 0 points for that night. You must notify the league admin so a substitute can be assigned. You are allowed a maximum of 2 sub replacements per season.</p>
             </Card>
             <Card>
               <h3 className="font-bold text-text-main mb-2">Can I choose my own sub?</h3>
-              <p className="text-text-muted">
-                No. To ensure competitive balance and fairness, all substitutes are assigned by the league administration from the approved sub pool.
-              </p>
+              <p className="text-text-muted">No. To ensure competitive balance and fairness, all substitutes are assigned by the league administration from the approved sub pool.</p>
             </Card>
             <Card>
               <h3 className="font-bold text-text-main mb-2">How do I qualify for the next season?</h3>
-              <p className="text-text-muted">
-                The top 4 players from the current season automatically qualify for the next season. Other spots may be filled through open registration or qualifying nights.
-              </p>
+              <p className="text-text-muted">The top 4 players from the current season automatically qualify for the next season. Other spots may be filled through open registration or qualifying nights.</p>
             </Card>
             <Card>
               <h3 className="font-bold text-text-main mb-2">Is there a warm-up period?</h3>
-              <p className="text-text-muted">
-                Yes, courts are available for warm-up starting at 6:45 PM. League play begins promptly at 7:00 PM.
-              </p>
+              <p className="text-text-muted">Yes, courts are available for warm-up starting at 6:45 PM. League play begins promptly at 7:00 PM.</p>
             </Card>
           </div>
         </div>
@@ -586,9 +507,7 @@ const Format: React.FC = () => {
               <MessageSquare className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-bold text-text-main">Have Questions?</h2>
             </div>
-            <p className="text-text-muted text-sm mb-6">
-              Can't find what you're looking for? Send us a message and we'll help you out.
-            </p>
+            <p className="text-text-muted text-sm mb-6">Can't find what you're looking for? Send us a message and we'll help you out.</p>
             <ContactForm />
           </Card>
         </div>

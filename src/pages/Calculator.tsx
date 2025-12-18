@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Calculator as CalcIcon } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { cn } from '../lib/utils';
 import MatchCalculator from '../components/calculator/MatchCalculator';

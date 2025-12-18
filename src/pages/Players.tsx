@@ -1,41 +1,93 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { seasonData, players } from '../data/leagueData';
-import { calculateSeasonStats } from '../lib/leagueUtils';
+import { Link, useSearchParams } from 'react-router-dom';
+import { seasonData, players, pastSeasons, qualifiers } from '../data/leagueData';
+import { calculateSeasonStats, calculateAllTimeStats, calculateWeekFinalPositions } from '../lib/leagueUtils';
 import { TrendingUp } from 'lucide-react';
 import Card from '../components/ui/Card';
 import PageHeader from '../components/ui/PageHeader';
+import SeasonSelector from '../components/SeasonSelector';
 import { Player } from '../types';
 
 const Players: React.FC = () => {
-  // Calculate stats from season data
+  const [searchParams, setSearchParams] = useSearchParams();
+  const seasonParam = searchParams.get('season');
+  const isAllTime = seasonParam === 'all-time';
+
+  const allSeasons = [seasonData, ...pastSeasons];
+  const selectedSeason = seasonParam && !seasonParam.startsWith('qualifier:') 
+    ? (allSeasons.find(s => s.season === seasonParam) || seasonData)
+    : seasonData;
+
+  const selectedQualifier = seasonParam && seasonParam.startsWith('qualifier:')
+    ? qualifiers.find(q => `qualifier:${q.id}` === seasonParam)
+    : undefined;
+
+  // Calculate stats based on selection
   const activePlayers = useMemo(() => {
     let stats: any[] = [];
-    if (seasonData.weeks) {
-      stats = calculateSeasonStats(seasonData).map((stat, index) => ({
+
+    if (isAllTime) {
+      stats = calculateAllTimeStats(seasonData, pastSeasons).map((s) => ({
+        id: s.playerId,
+        points: s.points,
+        rank: s.rank
+      }));
+    } else if (seasonParam && seasonParam.startsWith('qualifier:')) {
+      const parts = seasonParam.split(':');
+      const qId = parseInt(parts[1] || '', 10);
+      const qualifier = qualifiers.find(q => q.id === qId);
+      if (qualifier) {
+        const final = calculateWeekFinalPositions(qualifier);
+        if (final) {
+          stats = final.map(f => ({
+            id: f.playerId,
+            points: f.pointsEarned,
+            rank: f.globalRank
+          }));
+        } else {
+          stats = []; // qualifier not eligible (missing data)
+        }
+      }
+    } else if (selectedSeason && selectedSeason.weeks) {
+      stats = calculateSeasonStats(selectedSeason).map((stat, index) => ({
         ...stat,
         rank: index + 1,
-        playerId: stat.id
+        id: stat.id
       }));
     } else {
-      stats = seasonData.standings || [];
+      stats = [];
     }
 
     return stats.map(entry => {
-      const playerDetails = players.find(p => p.id === (entry.playerId || entry.id)) || { name: "Unknown", url: "", id: "unknown" } as Player;
+      const playerDetails = players.find(p => p.id === (entry.playerId || entry.id)) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
       return {
         ...entry,
         ...playerDetails
       };
     });
-  }, []);
+  }, [seasonParam, selectedSeason]);
 
   return (
     <div className="space-y-8">
       <PageHeader 
         title="Player Roster" 
-        subtitle={`${activePlayers.length} Active Players • ${seasonData.season}`}
-      />
+        subtitle={`${activePlayers.length} Active Players • ${isAllTime ? 'All-Time' : (selectedQualifier ? `Qualifier • ${selectedQualifier.date}` : (selectedSeason?.season || seasonData.season))}`}
+      >
+        <div className="mt-2">
+          <SeasonSelector
+            value={isAllTime ? 'all-time' : (selectedQualifier ? `qualifier:${selectedQualifier.id}` : (selectedSeason?.season || seasonData.season))}
+            onChange={(val) => {
+              if (val === 'all-time') {
+                setSearchParams({ season: 'all-time' });
+                return;
+              }
+              setSearchParams({ season: val });
+            }}
+            seasons={allSeasons}
+            qualifiers={qualifiers}
+          />
+        </div>
+      </PageHeader>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {activePlayers.map((player) => (
@@ -43,9 +95,9 @@ const Players: React.FC = () => {
             <Card className="h-full overflow-hidden p-0 border-border group-hover:border-primary/50 transition-all group-hover:shadow-lg group-hover:shadow-primary/5 flex flex-col">
               {/* Image Container */}
               <div className="aspect-square w-full relative bg-surface-highlight overflow-hidden">
-                {player.url ? (
+                {player.imageUrl ? (
                   <img 
-                    src={player.url.startsWith('/') ? `${import.meta.env.BASE_URL}${player.url.slice(1)}` : player.url} 
+                    src={player.imageUrl.startsWith('/') ? `${import.meta.env.BASE_URL}${player.imageUrl.slice(1)}` : player.imageUrl} 
                     alt={player.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

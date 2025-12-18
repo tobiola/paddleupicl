@@ -1,24 +1,84 @@
-import { Rules } from '../types';
+export const rules = {
+  title: "Paddle Up Individual Championship League",
+  subtitle: "The premier competitive league in St. Louis. Merit-based advancement, weekly stakes, and a path to the championship.",
+  schedule: {
+    day: "Sundays",
+    time: "7:00 - 9:00 PM"
+  },
+  location: {
+    name: "Paddle Up",
+    url: "https://maps.app.goo.gl/dKNY9dnEDiFdM3XK8",
+    city: "Chesterfield"
+  },
+  fee: "$160",
+  participant: {
+    type: "Individual",
+    note: "No Partner Needed"
+  },
+  register: {
+    url: "https://courtreserve.com",
+    text: "Register on CourtReserve"
+  },
+  missedWeekNote: "Missed week = 0 points",
 
-export const rules: Rules = {
   philosophy: "Competitive integrity is the priority. Rotating partners, merit-based court movement, and transparent standings determine advancement. Top performers earn season rewards and guaranteed spots for the next season, while lower performers must re-qualify to ensure a high level of competition.",
   seasonStructure: {
     rosterSize: 16,
     duration: "6 Weeks",
     when: "Sundays, 7:00 PM – 9:00 PM",
-    safeZone: "Top 12 Players: Safe. You are guaranteed a roster spot for the next season.",
-    dropZone: "Bottom 4 Players: Relegated. You lose your roster spot immediately. To rejoin, you must register for the Open Qualifiers and earn your way back in against new applicants."
+    safeZone: "Top 12 players (of a 16-player roster) automatically qualify for the next season — guaranteed roster spots at the end of the 6-week season.",
+    dropZone: "Bottom 4 players (of a 16-player roster) must re-qualify for the next season. They lose their roster spot at the end of the 6-week season and may re-enter via the Open Qualifiers."
   },
+
+  // Seeding rules: how initial placement is determined and the snake draw
+  seeding: {
+    overview: "Initial seeding uses DUPR for Week 1; thereafter seeding is based on season points and weekly performance.",
+    week1: "Use DUPR rating (higher DUPR = higher seed). If DUPR missing, use last-seen DUPR or default to league admin placement.",
+    draw: "Balanced 'Snake Draw' across 4 courts (1,8,9,16 / 2,7,10,15 / 3,6,11,14 / 4,5,12,13).",
+    tieBreakers: [
+      "Head-to-head (if available)",
+      "Higher DUPR",
+      "Most recent higher placement"
+    ],
+    promotionRelegation: {
+      summary: "Top 2 on each court advance/move up per round; courts are reassigned between rounds based on performance.",
+      nightlyPromotionBonus: "Players who win promotion to a higher court receive a small bonus (configurable) applied after nightly results."
+    },
+    courts: [
+      { name: "Court 1", seeds: "1, 8, 9, 16" },
+      { name: "Court 2", seeds: "2, 7, 10, 15" },
+      { name: "Court 3", seeds: "3, 6, 11, 14" },
+      { name: "Court 4", seeds: "4, 5, 12, 13" }
+    ]
+  },
+
+  rewards: {
+    firstPlace: {
+      name: "1st",
+      items: ["$100 Court Credit", "Free Entry Next Season", "50 Paddle Up Club Points"]
+    },
+    secondPlace: {
+      name: "2nd",
+      items: ["$60 Court Credit", "30 Paddle Up Club Points"]
+    },
+    thirdPlace: {
+      name: "3rd",
+      items: ["$40 Court Credit", "20 Paddle Up Club Points"]
+    },
+    notes: "Court credits are applied to player accounts; club points are tracked separately from league standings."
+  },
+
   qualification: {
+    description: "Before each season begins, we host two Open Qualifier events to fill the open roster spots.",
     who: [
       "New applicants (DUPR 3.6+ required)",
-      "Relegated players from the previous season"
+      "Players who must re-qualify from the previous season (bottom 4)"
     ],
     format: "Round Robin (Rotating Partners)",
     advancement: [
       "Qualifier #1: The Top 2 finishers earn a spot in the league",
       "Qualifier #2: The Top 2 finishers earn a spot in the league",
-      "Remaining league spots (if any) are filled based on overall points from both events"
+      "Remaining roster spots (if any) are filled based on overall points from both events"
     ],
     note: "If you fail to qualify in the first event, you may register for the second event to try again."
   },
@@ -51,20 +111,42 @@ export const rules: Rules = {
       ]
     }
   ],
+  faqs: [
+    {
+      question: "What happens if I miss a week?",
+      answer: "If you miss a week, you receive 0 points for that night. You must notify the league admin so a substitute can be assigned. You are allowed a maximum of 2 sub replacements per season."
+    },
+    {
+      question: "Can I choose my own sub?",
+      answer: "No. To ensure competitive balance and fairness, all substitutes are assigned by the league administration from the approved sub pool."
+    },
+    {
+      question: "How do I qualify for the next season?",
+      answer: "The top 4 players from the current season automatically qualify for the next season. Other spots may be filled through open registration or qualifying nights."
+    },
+    {
+      question: "Is there a warm-up period?",
+      answer: "Yes, courts are available for warm-up starting at 6:45 PM. League play begins promptly at 7:00 PM."
+    }
+  ],
   scoring: [
-    "Rally scoring",
-    "First to 11",
+    "Rally scoring (every rally scores)",
+    "Games to 11 — win on any point (no need to win by 2)",
     "Ceiling contact = out"
   ],
+
   points: {
-    championship: { 1: 1000, 2: 800, 3: 600, 4: 400 },
-    court2: { 1: 300, 2: 250, 3: 200, 4: 150 },
-    court3: { 1: 100, 2: 80, 3: 60, 4: 40 },
-    court4: { 1: 30, 2: 25, 3: 20, 4: 15 }
+    championship: { 1: 1000, 2: 800, 3: 600, 4: 500 },
+    court2:       { 1: 400, 2: 320, 3: 240, 4: 200 },
+    court3:       { 1: 200, 2: 160, 3: 120, 4: 100 },
+    court4:       { 1: 100, 2: 80, 3: 60, 4: 50 }
   },
+
   subs: [
     "League players must contact league administration to arrange for a sub ahead of time",
     "Subs will be chosen from from the top performers in the most recent Open Qualifiers",
     "Absent players receive 0 points"
   ]
-};
+} as const;
+
+export type Rules = typeof rules;

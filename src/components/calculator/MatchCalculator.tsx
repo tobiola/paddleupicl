@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, RefreshCw, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { rules } from '../../data/rules';
 import { players as allPlayers } from '../../data/leagueData';
-import { getNextCourt } from '../../lib/leagueUtils';
+import { getNextCourt, getPointsForRank } from '../../lib/leagueUtils';
 import Card from '../ui/Card';
 import RankBadge from '../ui/RankBadge';
 import PlayerSelect from '../PlayerSelect';
@@ -109,11 +108,8 @@ const MatchCalculator: React.FC = () => {
       // Only calculate points for Round 3
       if (parseInt(round as string) === 3) {
         const cNum = parseInt(court as string);
-        let points = 0;
-        if (cNum === 1) points = rules.points.championship[rank];
-        else if (cNum === 2) points = rules.points.court2[rank];
-        else if (cNum === 3) points = rules.points.court3[rank];
-        else if (cNum === 4) points = rules.points.court4[rank];
+        const globalRank = (cNum - 1) * 4 + rank;
+        const points = getPointsForRank(globalRank);
         pointsDisplay = `${points} pts`;
       }
 

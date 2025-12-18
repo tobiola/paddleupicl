@@ -138,13 +138,13 @@ const Home: React.FC = () => {
           
           <div className="space-y-4 flex-1">
             {topPlayers.map((entry, index) => {
-              const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", url: "", id: "unknown" } as Player;
+const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
               return (
                 <Link key={entry.playerId} to={`/player/${entry.playerId}`} className="flex items-center justify-between p-3 rounded-xl bg-surface-highlight border border-border hover:border-primary/50 transition-colors group">
                   <div className="flex items-center gap-3">
                     <RankBadge rank={index + 1} size="sm" />
                     <div className="flex items-center gap-3">
-                      <PlayerAvatar url={player.url} name={player.name} size="md" className="group-hover:ring-2 ring-primary transition-all" />
+<PlayerAvatar imageUrl={player.imageUrl} name={player.name} size="md" className="group-hover:ring-2 ring-primary transition-all" />
                       <span className="font-bold text-text-main group-hover:text-primary transition-colors">{player.name}</span>
                     </div>
                   </div>

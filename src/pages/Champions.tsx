@@ -6,6 +6,7 @@ import { pastSeasons, players } from '../data/leagueData';
 import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import PageHeader from '../components/ui/PageHeader';
+import { Player } from '../types';
 
 const Champions: React.FC = () => {
   return (
@@ -39,8 +40,8 @@ const Champions: React.FC = () => {
                 </div>
 
                 <div className="space-y-6 flex-1">
-                  {top3.map((entry, i) => {
-                    const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", url: "" };
+{top3.map((entry, i) => {
+                    const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", imageUrl: "" } as Player;
                     const medalColor = i === 0 ? "text-warning" : i === 1 ? "text-text-muted" : "text-orange-500";
                     const label = i === 0 ? "Champion" : i === 1 ? "Runner Up" : "Third Place";
 
@@ -48,7 +49,7 @@ const Champions: React.FC = () => {
                       <Link key={entry.playerId} to={`/player/${entry.playerId}`} className="flex items-center gap-4 group">
                         <div className="relative">
                           <PlayerAvatar 
-                            url={player.url} 
+                            imageUrl={player.imageUrl} 
                             name={player.name} 
                             size="lg" 
                             className={cn(

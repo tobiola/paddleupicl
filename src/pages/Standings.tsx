@@ -1,15 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { seasonData, pastSeasons, players } from '../data/leagueData';
-import { calculateSeasonStats, calculateAllTimeStats } from '../lib/leagueUtils';
-import { Trophy, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { seasonData, pastSeasons, players, qualifiers } from '../data/leagueData';
+import { calculateSeasonStats, calculateAllTimeStats, calculateWeekFinalPositions } from '../lib/leagueUtils';
+import { Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 import WeeklyPoints from '../components/WeeklyPoints';
 import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import PageHeader from '../components/ui/PageHeader';
 import RankBadge from '../components/ui/RankBadge';
-import { Player, SeasonData, Standing, PlayerStats, AllTimeStats } from '../types';
+import { Player, Standing, PlayerStats, AllTimeStats } from '../types';
+import SeasonSelector from '../components/SeasonSelector';
 
 type CombinedStanding = Partial<PlayerStats> & Partial<AllTimeStats> & Partial<Standing> & {
   playerId: string;
@@ -38,10 +39,27 @@ const Standings: React.FC = () => {
       return calculateAllTimeStats(seasonData, pastSeasons).map(s => ({
         ...s,
         rank: s.rank || 0,
-        playerId: s.playerId
+        playerId: s.playerId,
+        points: s.points
       }));
     }
 
+    // Qualifier selection (value: 'qualifier:<id>')
+    if (seasonParam && seasonParam.startsWith('qualifier:')) {
+      const parts = seasonParam.split(':');
+      const qId = parseInt(parts[1] || '', 10);
+      const qualifier = qualifiers.find(q => q.id === qId);
+      if (!qualifier) return [];
+      const final = calculateWeekFinalPositions(qualifier);
+      if (!final) return [];
+      return final.map(f => ({
+        playerId: f.playerId,
+        rank: f.globalRank,
+        points: f.pointsEarned
+      }));
+    }
+
+    // Regular season selection
     if (selectedSeason && selectedSeason.weeks) {
       return calculateSeasonStats(selectedSeason).map((stat, index) => ({
         ...stat,
@@ -49,11 +67,10 @@ const Standings: React.FC = () => {
         playerId: stat.id
       }));
     }
-    return (selectedSeason?.standings || []).map(s => ({
-      ...s,
-      playerId: s.playerId
-    }));
-  }, [selectedSeason, isAllTime]);
+
+    // No stored standings fallback — we derive from matches only
+    return [];
+  }, [selectedSeason, isAllTime, seasonParam]);
 
   const standings = useMemo(() => {
     let sortedData = [...baseStandings];
@@ -97,13 +114,21 @@ const Standings: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSeason = e.target.value;
-    if (newSeason === seasonData.season) {
+  const handleSeasonChange = (value: string) => {
+    if (value === 'all-time') {
+      setSearchParams({ season: 'all-time' });
+      return;
+    }
+    if (value.startsWith('qualifier:')) {
+      setSearchParams({ season: value });
+      return;
+    }
+    // keep default behavior: omit query param for current season
+    if (value === seasonData.season) {
       searchParams.delete('season');
       setSearchParams(searchParams);
     } else {
-      setSearchParams({ season: newSeason });
+      setSearchParams({ season: value });
     }
   };
 
@@ -120,19 +145,12 @@ const Standings: React.FC = () => {
             </div>
           )}
           <div className="relative">
-            <select
-              value={isAllTime ? 'all-time' : selectedSeason?.season}
+            <SeasonSelector
+              value={isAllTime ? 'all-time' : (selectedSeason?.season || seasonData.season)}
               onChange={handleSeasonChange}
-              className="appearance-none bg-surface border border-border text-text-main text-lg font-bold rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer"
-            >
-              {allSeasons.map((s) => (
-                <option key={s.season} value={s.season}>
-                  {s.season}
-                </option>
-              ))}
-              <option value="all-time">All Time</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-muted pointer-events-none" />
+              seasons={allSeasons}
+              qualifiers={qualifiers}
+            />
           </div>
         </div>
       </PageHeader>
@@ -162,7 +180,7 @@ const Standings: React.FC = () => {
             </thead>
             <tbody className="bg-surface divide-y divide-border">
               {standings.map((entry) => {
-                const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", url: "", id: "unknown" } as Player;
+const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
                 
                 // Calculate percentages
                 const totalGames = (entry.wins || 0) + (entry.losses || 0);
@@ -184,7 +202,7 @@ const Standings: React.FC = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <Link to={`/player/${entry.playerId}`} className="flex items-center group">
-                        <PlayerAvatar url={player.url} name={player.name} className="mr-3 group-hover:ring-2 ring-primary transition-all" />
+<PlayerAvatar imageUrl={player.imageUrl} name={player.name} className="mr-3 group-hover:ring-2 ring-primary transition-all" />
                         <div className="text-sm font-medium text-text-main group-hover:text-primary transition-colors">{player.name}</div>
                         {entry.rank === 1 && <Trophy className="ml-2 h-4 w-4 text-warning" />}
                       </Link>

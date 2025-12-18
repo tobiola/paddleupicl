@@ -2,9 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { players, seasonData, pastSeasons } from '../data/leagueData';
 import { calculateSeasonStats } from '../lib/leagueUtils';
-import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
-import PlayerAvatar from '../components/ui/PlayerAvatar';
 import RankBadge from '../components/ui/RankBadge';
 import { Trophy, TrendingUp, Calendar, Activity, ArrowLeft } from 'lucide-react';
 import { Match } from '../types';
@@ -103,9 +101,9 @@ const PlayerProfile: React.FC = () => {
         <div className="md:col-span-1 space-y-6">
           <Card className="p-0 overflow-hidden border-border">
             <div className="aspect-square w-full relative bg-surface-highlight">
-              {player.url ? (
+              {player.imageUrl ? (
                 <img 
-                  src={player.url.startsWith('/') ? `${import.meta.env.BASE_URL}${player.url.slice(1)}` : player.url} 
+                  src={player.imageUrl.startsWith('/') ? `${import.meta.env.BASE_URL}${player.imageUrl.slice(1)}` : player.imageUrl} 
                   alt={player.name}
                   className="w-full h-full object-cover"
                 />

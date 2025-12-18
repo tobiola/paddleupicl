@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, MapPin, ExternalLink, Clock, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { seasonData } from '../data/leagueData';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';

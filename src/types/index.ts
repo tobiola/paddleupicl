@@ -2,15 +2,19 @@ export interface Player {
   id: string;
   name: string;
   dupr?: number;
-  image?: string;
-  url?: string;
+  imageUrl?: string;
 }
 
 export interface Match {
+  id?: string;
   team1: string[];
   team2: string[];
   score1: number;
   score2: number;
+  court?: number;
+  round?: number;
+  event?: 'regular' | 'qualifier';
+  notes?: string;
 }
 
 export interface Week {
@@ -35,6 +39,12 @@ export interface Season {
   standings?: Standing[];
 }
 
+/**
+ * Qualifier events are similar in shape to a single Week (one-night events).
+ * We keep a dedicated type for clarity in data files and components.
+ */
+export type Qualifier = Week;
+
 export type SeasonData = Season;
 
 export interface PlayerStats {
@@ -56,34 +66,4 @@ export interface AllTimeStats {
   points: number;
   seasons: number;
   rank?: number;
-}
-
-export interface Rules {
-  philosophy: string;
-  seasonStructure: {
-    rosterSize: number;
-    duration: string;
-    when: string;
-    safeZone: string;
-    dropZone: string;
-  };
-  qualification: {
-    who: string[];
-    format: string;
-    advancement: string[];
-    note: string;
-  };
-  general: string[];
-  format: {
-    title: string;
-    description: string | string[];
-  }[];
-  scoring: string[];
-  points: {
-    championship: Record<number, number>;
-    court2: Record<number, number>;
-    court3: Record<number, number>;
-    court4: Record<number, number>;
-  };
-  subs: string[];
 }

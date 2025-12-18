@@ -62,7 +62,7 @@ const PlayerSelect: React.FC<PlayerSelectProps> = ({ value, onChange, placeholde
               onClick={() => handleSelect(p.name)}
               className="w-full text-left px-4 py-2 text-sm hover:bg-surface-alt flex items-center gap-2"
             >
-              <PlayerAvatar url={p.url} name={p.name} size="sm" border={false} />
+              <PlayerAvatar imageUrl={p.imageUrl} name={p.name} size="sm" border={false} />
               <span className="text-text-main">{p.name}</span>
             </button>
           ))}

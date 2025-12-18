@@ -1,105 +1,257 @@
 import { rules } from '../data/rules';
-import { Season, PlayerStats, AllTimeStats, Player } from '../types';
+import { Season, PlayerStats, AllTimeStats, Player, Match, Week } from '../types';
 
+/**
+ * Points mapping by rank (courts).
+ */
 export const getPointsForRank = (rank: number): number => {
   const { championship, court2, court3, court4 } = rules.points;
 
+  // Helper to safely index readonly literal objects
+  const safeLookup = (obj: any, key: number) => {
+    return (obj && (obj as any)[key]) ? (obj as any)[key] : 0;
+  };
+
   // Champ Court (1-4)
-  if (rank <= 4) return championship[rank] || 0;
+  if (rank <= 4) return safeLookup(championship, rank);
   
   // Court 2 (5-8)
-  if (rank <= 8) return court2[rank - 4] || 0;
+  if (rank <= 8) return safeLookup(court2, rank - 4);
 
   // Court 3 (9-12)
-  if (rank <= 12) return court3[rank - 8] || 0;
+  if (rank <= 12) return safeLookup(court3, rank - 8);
 
   // Court 4 (13-16)
-  if (rank <= 16) return court4[rank - 12] || 0;
+  if (rank <= 16) return safeLookup(court4, rank - 12);
 
   return 0;
 };
 
+/**
+ * Compute per-week aggregates from matches.
+ */
+const aggregatesFromWeek = (week: Week): Record<string, PlayerStats> => {
+  const agg: Record<string, PlayerStats> = {};
+
+  const ensure = (pid: string) => {
+    if (!agg[pid]) {
+      agg[pid] = {
+        id: pid,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        pointsWon: 0,
+        pointsLost: 0,
+        diff: 0,
+        appearances: 0,
+        champCourt: 0,
+        weeklyRanks: []
+      };
+    }
+  };
+
+  if (!week.matches) return agg;
+
+  week.matches.forEach((m: Match) => {
+    const { team1, team2, score1, score2 } = m;
+    const team1Won = score1 > score2;
+    const team2Won = score2 > score1;
+
+    // Ensure all player entries exist and increment appearance
+    team1.forEach(pid => { ensure(pid); agg[pid].appearances += 1; });
+    team2.forEach(pid => { ensure(pid); agg[pid].appearances += 1; });
+
+    // Points and diff
+    team1.forEach(pid => {
+      agg[pid].pointsWon += score1;
+      agg[pid].pointsLost += score2;
+      agg[pid].diff += (score1 - score2);
+      if (team1Won) agg[pid].wins += 1;
+      if (team2Won || score1 === score2) agg[pid].losses += 1;
+    });
+    team2.forEach(pid => {
+      agg[pid].pointsWon += score2;
+      agg[pid].pointsLost += score1;
+      agg[pid].diff += (score2 - score1);
+      if (team2Won) agg[pid].wins += 1;
+      if (team1Won || score1 === score2) agg[pid].losses += 1;
+    });
+  });
+
+  return agg;
+};
+
+
+/**
+ * Compute final positions for a week based on round 3 court assignments.
+ * Returns null if week is not eligible (missing round 3/court metadata or not completed).
+ */
+export const calculateWeekFinalPositions = (week: Week) => {
+  if (!week.isCompleted || !week.matches) return null;
+
+  // Ensure round 3 has matches for courts 1..4 (require full metadata)
+  const round3Matches = week.matches.filter(m => m.round === 3 && typeof m.court === 'number');
+  const courtsPresent = new Set(round3Matches.map(m => m.court));
+  const requiredCourts = [1, 2, 3, 4];
+  for (const c of requiredCourts) {
+    if (!courtsPresent.has(c)) return null; // incomplete metadata -> do not award points
+  }
+
+  // Helper: get matches for specific round+court
+  const matchesFor = (round: number, court: number) => week.matches!.filter(m => m.round === round && m.court === court);
+
+  // For final positions we only need round 3 per court
+  const results: {
+    playerId: string;
+    finalCourt: number;
+    finalPosition: number;
+    globalRank: number;
+    pointsEarned: number;
+  }[] = [];
+
+  for (const court of requiredCourts) {
+    const matches = matchesFor(3, court);
+    // Build per-player stats for this court's round 3
+    const agg: Record<string, PlayerStats> = {};
+    const ensure = (pid: string) => {
+      if (!agg[pid]) {
+        agg[pid] = {
+          id: pid,
+          points: 0,
+          wins: 0,
+          losses: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+          diff: 0,
+          appearances: 0,
+          champCourt: 0,
+          weeklyRanks: []
+        };
+      }
+    };
+    matches.forEach(m => {
+      const { team1, team2, score1, score2 } = m;
+      const team1Won = score1 > score2;
+      const team2Won = score2 > score1;
+
+      team1.forEach(pid => { ensure(pid); agg[pid].appearances += 1; agg[pid].pointsWon += score1; agg[pid].pointsLost += score2; agg[pid].diff += (score1 - score2); if (team1Won) agg[pid].wins += 1; if (team2Won || score1 === score2) agg[pid].losses += 1; });
+      team2.forEach(pid => { ensure(pid); agg[pid].appearances += 1; agg[pid].pointsWon += score2; agg[pid].pointsLost += score1; agg[pid].diff += (score2 - score1); if (team2Won) agg[pid].wins += 1; if (team1Won || score1 === score2) agg[pid].losses += 1; });
+    });
+
+    const players = Object.values(agg);
+    // comparator restricted to matches for this court/round
+    const comparator = (a: PlayerStats, b: PlayerStats) => {
+      if ((a.wins || 0) !== (b.wins || 0)) return (b.wins || 0) - (a.wins || 0);
+      // head-to-head restricted to these matches
+      let aWins = 0, bWins = 0;
+      matches.forEach(m => {
+        const aOnTeam1 = m.team1.includes(a.id);
+        const aOnTeam2 = m.team2.includes(a.id);
+        const bOnTeam1 = m.team1.includes(b.id);
+        const bOnTeam2 = m.team2.includes(b.id);
+        if ((aOnTeam1 && bOnTeam2) || (aOnTeam2 && bOnTeam1)) {
+          if (m.score1 > m.score2) {
+            if (aOnTeam1) aWins++;
+            if (bOnTeam1) bWins++;
+          } else if (m.score2 > m.score1) {
+            if (aOnTeam2) aWins++;
+            if (bOnTeam2) bWins++;
+          }
+        }
+      });
+      if (aWins !== bWins) return bWins - aWins; // more head-to-head wins first
+      if ((a.diff || 0) !== (b.diff || 0)) return (b.diff || 0) - (a.diff || 0);
+      if ((a.pointsWon || 0) !== (b.pointsWon || 0)) return (b.pointsWon || 0) - (a.pointsWon || 0);
+      if ((a.losses || 0) !== (b.losses || 0)) return (a.losses || 0) - (b.losses || 0);
+      return a.id.localeCompare(b.id);
+    };
+
+    players.sort(comparator);
+
+    players.forEach((p, idx) => {
+      const position = idx + 1;
+      const globalRank = (court - 1) * 4 + position;
+      const pointsEarned = getPointsForRank(globalRank);
+      results.push({
+        playerId: p.id,
+        finalCourt: court,
+        finalPosition: position,
+        globalRank,
+        pointsEarned
+      });
+    });
+  }
+
+  return results;
+};
+
+/**
+ * Calculate season-level aggregated PlayerStats by deriving weekly final court positions from matches.
+ * Points for a week are only awarded based on final positions after round 3 (per rules).
+ */
 export const calculateSeasonStats = (seasonData: Season): PlayerStats[] => {
-  const playerStats: Record<string, PlayerStats> = {};
+  const cumulative: Record<string, PlayerStats> = {};
 
   if (!seasonData.weeks) return [];
 
   seasonData.weeks.forEach(week => {
     if (!week.isCompleted) return;
 
-    // 1. Calculate League Points from Rankings
-    if (week.rankings) {
-      week.rankings.forEach((playerId, index) => {
-        if (!playerStats[playerId]) {
-          playerStats[playerId] = {
-            id: playerId,
-            points: 0,
-            wins: 0,
-            losses: 0,
-            pointsWon: 0,
-            pointsLost: 0,
-            diff: 0,
-            appearances: 0,
-            champCourt: 0,
-            weeklyRanks: []
-          };
-        }
+    const finalPositions = calculateWeekFinalPositions(week);
+    if (!finalPositions) return; // require full round3+court metadata
 
-        const rank = index + 1;
-        const points = getPointsForRank(rank);
-        
-        playerStats[playerId].points += points;
-        playerStats[playerId].appearances += 1;
-        playerStats[playerId].weeklyRanks.push(rank);
+    // Aggregate per-week match-level stats (all rounds) to accumulate wins/losses/diff etc.
+    const weekAgg = aggregatesFromWeek(week);
 
-        // Champ Court Appearance: Top 4 finish implies they ended on Champ Court
-        if (rank <= 4) {
-          playerStats[playerId].champCourt += 1;
-        }
-      });
-    }
+    finalPositions.forEach(fp => {
+      const pid = fp.playerId;
+      if (!cumulative[pid]) {
+        cumulative[pid] = {
+          id: pid,
+          points: 0,
+          wins: 0,
+          losses: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+          diff: 0,
+          appearances: 0,
+          champCourt: 0,
+          weeklyRanks: []
+        };
+      }
 
-    // 2. Calculate Wins/Losses/Diff from Matches
-    if (week.matches) {
-      week.matches.forEach(match => {
-        const { team1, team2, score1, score2 } = match;
-        const diff = score1 - score2;
-
-        // Team 1 Stats
-        team1.forEach(pid => {
-          if (!playerStats[pid]) return; // Should exist from rankings, but safety check
-          playerStats[pid].diff += diff;
-          playerStats[pid].pointsWon += score1;
-          playerStats[pid].pointsLost += score2;
-          if (score1 > score2) playerStats[pid].wins += 1;
-          else playerStats[pid].losses += 1;
-        });
-
-        // Team 2 Stats
-        team2.forEach(pid => {
-          if (!playerStats[pid]) return;
-          playerStats[pid].diff -= diff;
-          playerStats[pid].pointsWon += score2;
-          playerStats[pid].pointsLost += score1;
-          if (score2 > score1) playerStats[pid].wins += 1;
-          else playerStats[pid].losses += 1;
-        });
-      });
-    }
+      cumulative[pid].points += fp.pointsEarned;
+      // accumulate match stats from weekAgg if present
+      const w = weekAgg[pid];
+      if (w) {
+        cumulative[pid].wins += w.wins || 0;
+        cumulative[pid].losses += w.losses || 0;
+        cumulative[pid].pointsWon += w.pointsWon || 0;
+        cumulative[pid].pointsLost += w.pointsLost || 0;
+        cumulative[pid].diff += w.diff || 0;
+        cumulative[pid].appearances += w.appearances || 0;
+      }
+      cumulative[pid].weeklyRanks.push(fp.globalRank);
+      if (fp.globalRank <= 4) cumulative[pid].champCourt += 1;
+    });
   });
 
-  // Convert to array and sort
-  return Object.values(playerStats).sort((a, b) => {
+  // Convert to array and sort final season standings by points (primary), wins, diff
+  return Object.values(cumulative).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.wins !== a.wins) return b.wins - a.wins;
     return b.diff - a.diff;
   });
 };
 
+/**
+ * Calculate all-time stats by summing season points.
+ * For past seasons that provide stored standings we use them; otherwise derive from matches.
+ */
 export const calculateAllTimeStats = (currentSeason: Season, pastSeasons: Season[]): AllTimeStats[] => {
   const allStats: Record<string, { points: number; seasons: number }> = {};
   
-  // Process current season
+  // Process current season (derive)
   const currentStats = calculateSeasonStats(currentSeason);
   currentStats.forEach(p => {
     if (!allStats[p.id]) allStats[p.id] = { points: 0, seasons: 0 };
@@ -107,13 +259,20 @@ export const calculateAllTimeStats = (currentSeason: Season, pastSeasons: Season
     allStats[p.id].seasons += 1;
   });
 
-  // Process past seasons
+  // Process past seasons (use stored standings if present, else derive)
   pastSeasons.forEach(season => {
-    if (season.standings) {
+    if (season.standings && season.standings.length > 0) {
       season.standings.forEach(p => {
         if (!allStats[p.playerId]) allStats[p.playerId] = { points: 0, seasons: 0 };
         allStats[p.playerId].points += p.points;
         allStats[p.playerId].seasons += 1;
+      });
+    } else {
+      const derived = calculateSeasonStats(season);
+      derived.forEach(p => {
+        if (!allStats[p.id]) allStats[p.id] = { points: 0, seasons: 0 };
+        allStats[p.id].points += p.points;
+        allStats[p.id].seasons += 1;
       });
     }
   });
@@ -128,6 +287,9 @@ export const calculateAllTimeStats = (currentSeason: Season, pastSeasons: Season
     .map((stat, index) => ({ ...stat, rank: index + 1 }));
 };
 
+/**
+ * Helpers used by the calculator UI (existing logic preserved).
+ */
 export const getNextCourt = (round: number | string, court: number | string, rank: number): number | string => {
   const rNum = typeof round === 'string' ? parseInt(round) : round;
   const cNum = typeof court === 'string' ? parseInt(court) : court;

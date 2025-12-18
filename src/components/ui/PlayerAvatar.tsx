@@ -3,14 +3,14 @@ import { User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface PlayerAvatarProps {
-  url?: string;
+  imageUrl?: string;
   name?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   border?: boolean;
 }
 
-const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ url, name, size = 'md', className, border = true }) => {
+const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ imageUrl, name, size = 'md', className, border = true }) => {
   const sizeClasses = {
     sm: 'h-6 w-6 text-xs',
     md: 'h-8 w-8 text-xs',
@@ -32,11 +32,11 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ url, name, size = 'md', cla
     className
   );
 
-  if (url) {
+  if (imageUrl) {
     // Handle relative paths for GitHub Pages deployment
-    const finalUrl = url.startsWith('/') 
-      ? `${import.meta.env.BASE_URL}${url.slice(1)}` 
-      : url;
+    const finalUrl = imageUrl.startsWith('/') 
+      ? `${import.meta.env.BASE_URL}${imageUrl.slice(1)}` 
+      : imageUrl;
 
     return (
       <img 
