@@ -10,7 +10,7 @@ export const rules = {
     url: "https://maps.app.goo.gl/dKNY9dnEDiFdM3XK8",
     city: "Chesterfield"
   },
-  fee: "$160",
+  fee: "$80",
   participant: {
     type: "Individual",
     note: "No Partner Needed"
@@ -136,10 +136,10 @@ export const rules = {
   ],
 
   points: {
-    championship: { 1: 1000, 2: 800, 3: 600, 4: 500 },
-    court2:       { 1: 400, 2: 320, 3: 240, 4: 200 },
-    court3:       { 1: 200, 2: 160, 3: 120, 4: 100 },
-    court4:       { 1: 100, 2: 80, 3: 60, 4: 50 }
+    championship: { 1: 1000, 2: 800, 3: 600, 4: 400 },
+    court2:       { 1: 300, 2: 240, 3: 180, 4: 120 },
+    court3:       { 1: 100, 2: 80,  3: 60,  4: 40  },
+    court4:       { 1: 30, 2: 24,  3: 18,  4: 12  }
   },
 
   subs: [
