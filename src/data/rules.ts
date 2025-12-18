@@ -34,7 +34,7 @@ export const rules = {
   seeding: {
     overview: "Initial seeding uses DUPR for Week 1; thereafter seeding is based on season points and weekly performance.",
     week1: "Use DUPR rating (higher DUPR = higher seed). If DUPR missing, use last-seen DUPR or default to league admin placement.",
-    draw: "Balanced 'Snake Draw' across 4 courts (1,8,9,16 / 2,7,10,15 / 3,6,11,14 / 4,5,12,13).",
+    draw: "Balanced 'Snake Draw' across 4 courts.",
     tieBreakers: [
       "Head-to-head (if available)",
       "Higher DUPR",

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, RefreshCw, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { rules } from '../../data/rules';
 import { players as allPlayers } from '../../data/leagueData';
 import { getNextCourt, getPointsForRank } from '../../lib/leagueUtils';
 import Card from '../ui/Card';
@@ -23,10 +25,11 @@ interface ScoreState {
 }
 
 const MatchCalculator: React.FC = () => {
-  const [round, setRound] = useState<number | string>(1);
-  const [court, setCourt] = useState<number | string>(1);
+  const [round, setRound] = useState<number | string>('');
+  const [court, setCourt] = useState<number | string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [players, setPlayers] = useState<PlayerState[]>([
     { id: 1, name: '', wins: 0, points: 0, diff: 0 },
     { id: 2, name: '', wins: 0, points: 0, diff: 0 },
@@ -59,6 +62,13 @@ const MatchCalculator: React.FC = () => {
   };
 
   const calculateResults = () => {
+    // Validate that user selected round and court
+    if (!round || !court) {
+      setError('Please select both Round and Court before calculating results.');
+      return;
+    }
+    setError(null);
+
     // Reset stats
     let currentPlayers = players.map(p => ({ ...p, wins: 0, points: 0, diff: 0 }));
 
@@ -213,9 +223,10 @@ const MatchCalculator: React.FC = () => {
             <label className="block text-sm font-medium text-text-muted mb-1">Round</label>
             <select 
               value={round} 
-              onChange={(e) => setRound(e.target.value)}
+              onChange={(e) => { setRound(e.target.value); setError(null); }}
               className="w-full rounded-md bg-surface-highlight border-border text-text-main shadow-sm focus:border-primary focus:ring-primary border p-2"
             >
+              <option value="">Select round...</option>
               <option value={1}>Round 1</option>
               <option value={2}>Round 2</option>
               <option value={3}>Round 3</option>
@@ -225,9 +236,10 @@ const MatchCalculator: React.FC = () => {
             <label className="block text-sm font-medium text-text-muted mb-1">Court</label>
             <select 
               value={court} 
-              onChange={(e) => setCourt(e.target.value)}
+              onChange={(e) => { setCourt(e.target.value); setError(null); }}
               className="w-full rounded-md bg-surface-highlight border-border text-text-main shadow-sm focus:border-primary focus:ring-primary border p-2"
             >
+              <option value="">Select court...</option>
               <option value={1}>Court 1</option>
               <option value={2}>Court 2</option>
               <option value={3}>Court 3</option>
@@ -235,6 +247,10 @@ const MatchCalculator: React.FC = () => {
             </select>
           </div>
         </div>
+
+        {error && (
+          <p className="text-sm text-error mt-2">{error}</p>
+        )}
 
         {/* Player Names */}
         <div className="space-y-3">
@@ -334,7 +350,13 @@ const MatchCalculator: React.FC = () => {
         <div className="pt-4 flex gap-3">
           <button
             onClick={calculateResults}
-            className="flex-1 bg-primary text-text-main py-2 px-4 rounded-md hover:bg-primary-hover font-medium shadow-sm"
+            disabled={!round || !court}
+            className={cn(
+              "flex-1 py-2 px-4 rounded-md font-medium shadow-sm",
+              (!round || !court)
+                ? "bg-surface-highlight text-text-muted border border-border cursor-not-allowed"
+                : "bg-primary text-text-main hover:bg-primary-hover"
+            )}
           >
             Calculate Results
           </button>
