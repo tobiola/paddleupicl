@@ -1,5 +1,9 @@
-export const rules = {
-  title: "Paddle Up Individual Championship League",
+/**
+ * Centralized rules file.
+ * Contains base/league/challenge variants. Use spread to minimize duplication.
+ */
+
+export const baseRules = {
   subtitle: "The premier competitive league in St. Louis. Merit-based advancement, weekly stakes, and a path to the championship.",
   schedule: {
     day: "Sundays",
@@ -10,7 +14,6 @@ export const rules = {
     url: "https://maps.app.goo.gl/dKNY9dnEDiFdM3XK8",
     city: "Chesterfield"
   },
-  fee: "$80",
   participant: {
     type: "Individual",
     note: "No Partner Needed"
@@ -149,4 +152,24 @@ export const rules = {
   ]
 } as const;
 
+/* leagueRules: full season variant */
+export const leagueRules = {
+  title: "Paddle Up Individual Championship League",
+  fee: "$80",
+  ...baseRules
+} as const;
+
+/* challengeRules: current short-format variant — reuse baseRules with overrides */
+export const challengeRules = {
+  title: "The Challenge",
+  price: { amount: 15, unit: "per night", display: "$15", note: "per night" },
+  showSections: { seasonStructure: false, prizes: false, qualifiers: false },
+  ...baseRules
+} as const;
+
+/* Backwards compat: default exported 'rules' used across the app points to the league rules */
+export const rules = leagueRules;
+
 export type Rules = typeof rules;
+export type LeagueRules = typeof leagueRules;
+export type ChallengeRules = typeof challengeRules;

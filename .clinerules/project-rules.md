@@ -23,6 +23,7 @@ This is a React application for managing the Paddle Up Individual Championship L
 - **Language:** Use TypeScript for all new files (`.ts` or `.tsx`).
 - **Styling:** Use Tailwind CSS utility classes. Avoid custom CSS unless necessary.
 - **Components:** Use functional components with hooks and proper type definitions.
+- **Single-component files:** Each file should export only one root-level React component. If you need helper or subcomponents, place them in their own files within src/components/ and import them where needed.
 - **Navigation:** Use `Link` from `react-router-dom` for internal links.
 - **Data Integrity:** When modifying `leagueData.ts`, ensure the structure of `weeks`, `rankings`, and `matches` remains consistent with the defined types.
 - **Points System:** The point structure is defined in `rules.points` within `src/data/rules.ts`. Do not hardcode point values in components; always reference the rules or use `leagueUtils.ts`.

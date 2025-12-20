@@ -3,6 +3,7 @@ import { Calendar, MapPin, ExternalLink, Clock, CheckCircle, AlertCircle } from 
 import { seasonData } from '../data/leagueData';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
+import ToggleGroup from '../components/ui/ToggleGroup';
 import { cn } from '../lib/utils';
 
 const Schedule: React.FC = () => {
@@ -60,30 +61,15 @@ const Schedule: React.FC = () => {
 
       {/* Season Navigation */}
       <div className="flex justify-center">
-        <div className="bg-surface-highlight p-1 rounded-xl inline-flex border border-border">
-          <button
-            onClick={() => setSelectedSeason('current')}
-            className={cn(
-              "px-6 py-2.5 rounded-lg text-sm font-bold transition-all",
-              selectedSeason === 'current'
-                ? "bg-primary text-text-main shadow-md"
-                : "text-text-muted hover:text-text-main hover:bg-surface"
-            )}
-          >
-            Season 2 (Current)
-          </button>
-          <button
-            onClick={() => setSelectedSeason('future')}
-            className={cn(
-              "px-6 py-2.5 rounded-lg text-sm font-bold transition-all",
-              selectedSeason === 'future'
-                ? "bg-primary text-text-main shadow-md"
-                : "text-text-muted hover:text-text-main hover:bg-surface"
-            )}
-          >
-            Season 3 (Future)
-          </button>
-        </div>
+        <ToggleGroup
+          options={[
+            { value: 'current', label: 'Season 2 (Current)' },
+            { value: 'future', label: 'Season 3 (Future)' }
+          ]}
+          value={selectedSeason}
+          onChange={(v) => setSelectedSeason(v as 'current' | 'future')}
+          className="bg-surface-highlight p-1 rounded-xl inline-flex border border-border"
+        />
       </div>
 
       {selectedSeason === 'current' ? (
