@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { rules } from '../data/rules';
 import {
   Trophy,
@@ -23,24 +24,31 @@ import QuickInfoGrid from '../components/format/QuickInfoGrid';
 import ScoringSection from '../components/format/ScoringSection';
 import SeasonStructure from '../components/format/SeasonStructure';
 import PrizesRewards from '../components/format/PrizesRewards';
+import PrizeGrid from '../components/format/PrizeGrid';
 import PreSeasonQualifiers from '../components/format/PreSeasonQualifiers';
 import NightlyFormat from '../components/format/NightlyFormat';
 import FAQSection from '../components/format/FAQSection';
 import ContactCard from '../components/format/ContactCard';
-import getFormatConfig from '../lib/formatUtils';
+import { leagueRules, challengeRules } from '../data/rules';
 
 const Format: React.FC = () => {
   const [view, setView] = useState<'current' | 'future'>('current');
-  const merged = getFormatConfig(view);
+  const selected = view === 'current' ? challengeRules : leagueRules;
+  const price = view === 'current'
+    ? (challengeRules.price as { display: string; note?: string })
+    : { display: leagueRules.fee, note: leagueRules.seasonStructure?.duration };
+  const showSections = view === 'current'
+    ? (challengeRules.showSections ?? { seasonStructure: false, prizes: false, qualifiers: false })
+    : { seasonStructure: true, prizes: true, qualifiers: true };
 
   useEffect(() => {
-    document.title = `${rules.title} — ${merged.title}`;
-  }, [merged.title]);
+    document.title = `${rules.title} — ${selected.title}`;
+  }, [selected.title]);
 
   return (
     <div className="space-y-16 pb-12">
       <PageHeader
-        title={`${rules.title} — ${merged.title}`}
+        title={selected.title}
         subtitle="Rotating partners, weekly standings with promotion/relegation, weekly points, open qualifiers, and season prizes."
         center
       />
@@ -57,20 +65,65 @@ const Format: React.FC = () => {
         />
       </div>
 
+      {/* Hero banner for the selected view */}
+      <div className="max-w-5xl mx-auto mt-6 rounded-3xl overflow-hidden shadow-lg">
+        <div className="bg-gradient-to-r from-primary to-primary-light p-8 md:p-12 text-white flex flex-col md:flex-row items-center gap-6">
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-3xl md:text-4xl font-extrabold mb-2">{selected.title}</h3>
+            <p className="text-lg md:text-xl opacity-90">{selected.summary}</p>
+          </div>
+
+          <div className="flex-shrink-0 text-center md:text-right">
+            <div className="text-2xl font-bold">{price.display}</div>
+            <div className="text-sm opacity-90 mb-4">{price.note}</div>
+            {view === 'current' ? (
+              <Link
+                to="/schedule"
+                className="inline-block bg-white text-primary px-6 py-3 rounded-xl font-bold hover:opacity-90 transition"
+              >
+                Register for Tonight
+              </Link>
+            ) : (
+              <a
+                href={rules.register.url}
+                className="inline-block bg-white text-primary px-6 py-3 rounded-xl font-bold hover:opacity-90 transition"
+              >
+                Register for Season
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Quick Info Grid */}
-      <QuickInfoGrid price={merged.price} />
+      <QuickInfoGrid viewRules={selected} />
 
       {/* Scoring */}
       <ScoringSection />
 
       {/* Season Structure */}
-      {merged.showSections.seasonStructure && <SeasonStructure />}
+      {showSections.seasonStructure && <SeasonStructure />}
 
       {/* Prizes & Rewards */}
-      {merged.showSections.prizes && <PrizesRewards />}
+      {showSections.prizes && <PrizesRewards />}
+
+      {/* Monthly Prizes (Challenge) */}
+      {view === 'current' && (
+        <div className="max-w-4xl mx-auto">
+          <PrizeGrid
+            heading="Monthly Prizes"
+            subtitle="At the end of each month, the top 3 players in the monthly standings will receive club points as rewards for their performance."
+            entries={[
+              { title: '1st', items: ['50 Club Pts'], accent: true },
+              { title: '2nd', items: ['30 Club Pts'] },
+              { title: '3rd', items: ['20 Club Pts'] }
+            ]}
+          />
+        </div>
+      )}
 
       {/* Pre-Season Qualifiers */}
-      {merged.showSections.qualifiers && <PreSeasonQualifiers />}
+      {showSections.qualifiers && <PreSeasonQualifiers />}
 
       {/* Seeding & Assignments */}
       <div className="space-y-8">
@@ -166,26 +219,28 @@ const Format: React.FC = () => {
         </Card>
 
         {/* Substitutes */}
-        <Card>
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="h-6 w-6 text-warning" />
-            <h2 className="text-xl font-bold text-text-main">Substitute Policy</h2>
-          </div>
-          <ul className="space-y-3">
-            {rules.subs.map((rule, index) => (
-              <li key={index} className="flex items-start text-text-muted">
-                <span className="mr-2">•</span>
-                {rule}
-              </li>
-            ))}
-          </ul>
-        </Card>
+        {view !== 'current' && (
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="h-6 w-6 text-warning" />
+              <h2 className="text-xl font-bold text-text-main">Substitute Policy</h2>
+            </div>
+            <ul className="space-y-3">
+              {rules.subs.map((rule, index) => (
+                <li key={index} className="flex items-start text-text-muted">
+                  <span className="mr-2">•</span>
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
       </div>
 
       {/* FAQ & Contact Section */}
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         <div className="md:col-span-2 space-y-8">
-          <FAQSection />
+          <FAQSection hideChallengeFAQs={view === 'current'} />
         </div>
 
         <div className="md:col-span-1">

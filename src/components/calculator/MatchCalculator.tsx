@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, RefreshCw, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { rules } from '../../data/rules';
-import { players as allPlayers } from '../../data/leagueData';
 import { getNextCourt, getPointsForRank } from '../../lib/leagueUtils';
 import Card from '../ui/Card';
 import RankBadge from '../ui/RankBadge';
@@ -163,7 +161,7 @@ const MatchCalculator: React.FC = () => {
     
     // Helper to get real player ID from name
     const getRealId = (name: string) => {
-      const found = allPlayers.find(p => p.name === name);
+      const found = players.find(p => p.name === name);
       return found ? `"${found.id}"` : `"${name}"`;
     };
 

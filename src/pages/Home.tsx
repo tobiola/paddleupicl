@@ -1,36 +1,79 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, ArrowRight, Users, Calendar, Star } from 'lucide-react';
-import { seasonData, players } from '../data/leagueData';
-import { calculateSeasonStats } from '../lib/leagueUtils';
+import { challengeEvents } from '../data/challengeEvents';
+import { players } from '../data/players';
+import { calculateWeekFinalPositions } from '../lib/leagueUtils';
 import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import RankBadge from '../components/ui/RankBadge';
 import { Player } from '../types';
 
 const Home: React.FC = () => {
-  // Get top 3 players
+  // Get top 3 players derived from challengeEvents (all-time)
   const topPlayers = React.useMemo(() => {
-    if (seasonData.weeks) {
-      return calculateSeasonStats(seasonData)
-        .slice(0, 3)
-        .map((stat, index) => ({
-          ...stat,
-          rank: index + 1,
-          playerId: stat.id
-        }));
-    }
-    // Fallback if no weeks data, though calculateSeasonStats handles empty weeks
-    return (seasonData.standings || []).slice(0, 3).map((s, i) => ({
-      ...s,
-      rank: i + 1,
-      wins: 0, // Default if using raw standings
-      losses: 0,
-      winRate: 0,
-      pointsPerWeek: 0,
-      attendance: 0
+    const pointsByPlayer = new Map<string, number>();
+    const events = (challengeEvents || []).filter((ev) => Array.isArray(ev.matches) && ev.matches.length > 0);
+
+    events.forEach((ev, idx) => {
+      const weekLike = {
+        id: ev.id,
+        date: ev.startDateTime ? ev.startDateTime.toISOString() : ev.id,
+        isCompleted: true,
+        matches: ev.matches
+      } as any;
+      const finals = calculateWeekFinalPositions(weekLike) || [];
+      finals.forEach((f: any) => {
+        const pid = f.playerId;
+        const pts = f.pointsEarned || 0;
+        pointsByPlayer.set(pid, (pointsByPlayer.get(pid) || 0) + pts);
+      });
+    });
+
+    const rows = Array.from(pointsByPlayer.entries()).map(([playerId, points]) => ({ playerId, points }));
+    rows.sort((a, b) => b.points - a.points);
+
+    return rows.slice(0, 3).map((r, index) => ({
+      playerId: r.playerId,
+      points: r.points,
+      rank: index + 1
     }));
   }, []);
+
+  const seriesLabel = (() => {
+    const parsed = (challengeEvents || []).filter((ev) => ev.startDateTime instanceof Date && !isNaN(ev.startDateTime.getTime()));
+    if (parsed.length === 0) return 'Challenge Series';
+    const years = Array.from(new Set(parsed.map(ev => ev.startDateTime.getFullYear()))).sort();
+    return years.length === 1 ? `${years[0]} Challenge` : `${years[0]}–${years[years.length - 1]} Challenge`;
+  })();
+
+  // Compute the next upcoming challenge event (players can register for)
+  const nextEvent = React.useMemo(() => {
+    if (!challengeEvents || challengeEvents.length === 0) return null;
+
+    // Only keep events with a valid Date object
+    const parsed = challengeEvents.filter((ev) => ev.startDateTime instanceof Date && !isNaN(ev.startDateTime.getTime()));
+
+    // Sort by startDateTime ascending
+    parsed.sort((a, b) => a.startDateTime.getTime() - b.startDateTime.getTime());
+
+    const now = new Date();
+    // Use current moment (including time) to decide upcoming events
+    const nowTs = now.getTime();
+
+    // Find events that are now or in the future
+    const upcoming = parsed.filter((p) => p.startDateTime.getTime() >= nowTs);
+
+    if (upcoming.length > 0) return upcoming[0];
+    // If none upcoming, return null (show nothing)
+    return null;
+  }, []);
+
+  const formatNiceDate = (d?: Date | null) =>
+    d ? d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : '';
+
+  const formatNiceTime = (d?: Date | null) =>
+    d ? d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : '';
 
   return (
     <div className="space-y-12">
@@ -45,7 +88,7 @@ const Home: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
             </span>
-            <span className="text-sm font-medium text-text-main">Season {seasonData.season} is Live</span>
+            <span className="text-sm font-medium text-text-main">{seriesLabel} is Live</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-text-main mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
@@ -78,22 +121,22 @@ const Home: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Users className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">{players.length}</span>
-          <span className="text-sm text-text-muted uppercase tracking-wider">Active Players</span>
+          <span className="text-3xl font-bold text-text-main mb-1">16</span>
+          <span className="text-sm text-text-muted uppercase tracking-wider">Players per night</span>
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Calendar className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">6</span>
-          <span className="text-sm text-text-muted uppercase tracking-wider">Weeks</span>
+          <span className="text-3xl font-bold text-text-main mb-1">7-9 PM</span>
+          <span className="text-sm text-text-muted uppercase tracking-wider">Every Sunday</span>
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Trophy className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">$100</span>
-          <span className="text-sm text-text-muted uppercase tracking-wider">Prize Pool</span>
+          <span className="text-3xl font-bold text-text-main mb-1">100</span>
+          <span className="text-sm text-text-muted uppercase tracking-wider">Club Points Prize Pool</span>
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center text-center hover:border-primary/30 transition-colors group">
           <Star className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <span className="text-3xl font-bold text-text-main mb-1">3.75+ DUPR</span>
+          <span className="text-3xl font-bold text-text-main mb-1">3.6+ DUPR</span>
           <span className="text-sm text-text-muted uppercase tracking-wider">Level Format</span>
         </Card>
       </div>
@@ -102,23 +145,23 @@ const Home: React.FC = () => {
       <div className="bg-surface-highlight/50 rounded-2xl p-8 border border-border text-center">
         <h2 className="text-2xl font-bold text-text-main mb-4 flex items-center justify-center gap-2">
           <Trophy className="h-6 w-6 text-warning" />
-          Season Prizes
+          Monthly Prizes
         </h2>
         <p className="text-text-muted max-w-2xl mx-auto mb-6">
-          Compete for over $200 in court credits and Paddle Up Club points. Top performers earn free entry to the next season and exclusive rewards.
+          At the end of each month, the top 3 players in the monthly standings will receive club points as rewards for their performance.
         </p>
         <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           <div className="bg-surface p-4 rounded-xl border border-border">
             <span className="block text-2xl font-bold text-warning mb-1">1st Place</span>
-            <span className="text-sm text-text-muted">$100 Credit + 50 Club Pts</span>
+            <span className="text-sm text-text-muted">50 Club Pts</span>
           </div>
           <div className="bg-surface p-4 rounded-xl border border-border">
             <span className="block text-2xl font-bold text-text-main mb-1">2nd Place</span>
-            <span className="text-sm text-text-muted">$60 Credit + 30 Club Pts</span>
+            <span className="text-sm text-text-muted">30 Club Pts</span>
           </div>
           <div className="bg-surface p-4 rounded-xl border border-border">
             <span className="block text-2xl font-bold text-text-main mb-1">3rd Place</span>
-            <span className="text-sm text-text-muted">$40 Credit + 20 Club Pts</span>
+            <span className="text-sm text-text-muted">20 Club Pts</span>
           </div>
         </div>
       </div>
@@ -137,8 +180,8 @@ const Home: React.FC = () => {
           </div>
           
           <div className="space-y-4 flex-1">
-            {topPlayers.map((entry, index) => {
-const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
+            {topPlayers.map((entry: any, index: number) => {
+  const player = players.find((p: Player) => p.id === entry.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
               return (
                 <Link key={entry.playerId} to={`/player/${entry.playerId}`} className="flex items-center justify-between p-3 rounded-xl bg-surface-highlight border border-border hover:border-primary/50 transition-colors group">
                   <div className="flex items-center gap-3">
@@ -161,32 +204,41 @@ const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", 
         <Card className="h-full flex flex-col bg-gradient-to-br from-surface to-surface-highlight relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-2xl font-bold text-text-main mb-4">Next Match Night</h2>
-            <div className="space-y-6">
-              <div>
-                <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Date</p>
-                <p className="text-xl font-bold text-text-main">Sunday, December 28th</p>
+
+            {nextEvent ? (
+              <div className="space-y-6">
+                <div>
+                  <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Date</p>
+                  <p className="text-xl font-bold text-text-main">{formatNiceDate(nextEvent.startDateTime)}</p>
+                </div>
+                <div>
+                  <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Time</p>
+                  <p className="text-xl font-bold text-text-main">{formatNiceTime(nextEvent.startDateTime)}</p>
+                </div>
+                <div>
+                  <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Location</p>
+                  <p className="text-xl font-bold text-text-main">{nextEvent.location}</p>
+                </div>
+
+                <div className="pt-4">
+                  <a 
+                    href={nextEvent.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-surface border border-border hover:border-primary/50 rounded-xl text-text-main font-bold transition-colors"
+                  >
+                    Register on CourtReserve
+                  </a>
+                </div>
               </div>
-              <div>
-                <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Time</p>
-                <p className="text-xl font-bold text-text-main">7:00 PM - 9:00 PM</p>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-text-muted">No upcoming match nights are listed. Check the full schedule for details.</p>
+                <Link to="/schedule" className="inline-flex items-center justify-center w-full px-6 py-3 bg-surface border border-border hover:border-primary/50 rounded-xl text-text-main font-bold transition-colors">
+                  View Schedule
+                </Link>
               </div>
-              <div>
-                <p className="text-text-muted text-sm uppercase tracking-wider mb-1">Location</p>
-                <p className="text-xl font-bold text-text-main">Paddle Up Pickleball Club</p>
-                <p className="text-text-muted">Chesterfield, MO</p>
-              </div>
-              
-              <div className="pt-4">
-                <a 
-                  href="https://courtreserve.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-6 py-3 bg-surface border border-border hover:border-primary/50 rounded-xl text-text-main font-bold transition-colors"
-                >
-                  Register on CourtReserve
-                </a>
-              </div>
-            </div>
+            )}
           </div>
         </Card>
       </div>

@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Grid, Users, CheckCircle } from 'lucide-react';
-import { players as allPlayers, seasonData } from '../../data/leagueData';
-import { calculateSeasonStats, generateSnakeDraw } from '../../lib/leagueUtils';
+import { players as allPlayers } from '../../data/players';
+import { challengeEvents } from '../../data/challengeEvents';
+import { calculateWeekFinalPositions, generateSnakeDraw } from '../../lib/leagueUtils';
 import Card from '../ui/Card';
 import PageHeader from '../ui/PageHeader';
 import { cn } from '../../lib/utils';
@@ -16,17 +18,34 @@ interface PlayerWithStats extends Player {
 }
 
 const InitialAssignments: React.FC<InitialAssignmentsProps> = ({ onBack }) => {
+  const navigate = useNavigate();
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set());
   const [assignments, setAssignments] = useState<ReturnType<typeof generateSnakeDraw> | null>(null);
 
-  // Get all players with their current season stats
+  // Get all players with their current stats derived from challengeEvents
   const playerStats = useMemo(() => {
-    const stats = calculateSeasonStats(seasonData);
-    const statsMap = new Map(stats.map(s => [s.id, s]));
-    
+    // Aggregate points per player from challenge events that include matches
+    const events = challengeEvents.filter(ev => Array.isArray(ev.matches) && ev.matches.length > 0);
+    const pointsByPlayer = new Map<string, number>();
+
+    events.forEach((ev, idx) => {
+      const weekLike = {
+        id: idx,
+        date: ev.startDateTime ? ev.startDateTime.toISOString() : ev.id,
+        isCompleted: true,
+        matches: ev.matches
+      } as any;
+      const finals = calculateWeekFinalPositions(weekLike) || [];
+      finals.forEach((f: any) => {
+        const pid = f.playerId;
+        const pts = f.pointsEarned || 0;
+        pointsByPlayer.set(pid, (pointsByPlayer.get(pid) || 0) + pts);
+      });
+    });
+
     return allPlayers.map(p => ({
       ...p,
-      points: statsMap.get(p.id)?.points || 0,
+      points: pointsByPlayer.get(p.id) || 0,
       dupr: p.dupr || 0
     })).sort((a, b) => {
       // Sort by Points (Desc), then DUPR (Desc), then Name (Asc)
@@ -149,31 +168,42 @@ const InitialAssignments: React.FC<InitialAssignmentsProps> = ({ onBack }) => {
               <p>Select players and click Generate</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assignments.map((court) => (
-                <Card key={court.id} className="border-l-4 border-l-primary">
-                  <h3 className="font-bold text-lg mb-4 pb-2 border-b border-border flex justify-between items-center">
-                    {court.name}
-                    <span className="text-xs font-normal text-text-muted bg-surface-highlight px-2 py-1 rounded">
-                      Seeds: {court.indices.map(i => i + 1).join(', ')}
-                    </span>
-                  </h3>
-                  <div className="space-y-3">
-                    {court.players.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-text-muted w-6">#{p.seed}</span>
-                          <span className="font-medium">{p.name}</span>
+            <div>
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={() => navigate('/match-sheet', { state: { assignments } })}
+                  className="px-4 py-2 bg-primary text-text-main rounded-md font-bold hover:bg-primary-hover transition"
+                >
+                  Open Match Sheet
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assignments.map((court) => (
+                  <Card key={court.id} className="border-l-4 border-l-primary">
+                    <h3 className="font-bold text-lg mb-4 pb-2 border-b border-border flex justify-between items-center">
+                      {court.name}
+                      <span className="text-xs font-normal text-text-muted bg-surface-highlight px-2 py-1 rounded">
+                        Seeds: {court.indices.map(i => i + 1).join(', ')}
+                      </span>
+                    </h3>
+                    <div className="space-y-3">
+                      {court.players.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-text-muted w-6">#{p.seed}</span>
+                            <span className="font-medium">{p.name}</span>
+                          </div>
+                          <span className="text-xs text-text-muted">{(p as unknown as PlayerWithStats).points} pts</span>
                         </div>
-                        <span className="text-xs text-text-muted">{(p as unknown as PlayerWithStats).points} pts</span>
-                      </div>
-                    ))}
-                    {court.players.length === 0 && (
-                      <p className="text-sm text-text-muted italic">No players assigned</p>
-                    )}
-                  </div>
-                </Card>
-              ))}
+                      ))}
+                      {court.players.length === 0 && (
+                        <p className="text-sm text-text-muted italic">No players assigned</p>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
         </div>

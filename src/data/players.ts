@@ -10,7 +10,8 @@ export const players: Player[] = [
   {
     id: "tobiola",
     name: "Tobi Ola",
-    imageUrl: "/images/players/tobiola.jpg"
+    imageUrl: "/images/players/tobiola.jpg",
+    dupr: 4.153
   },
   {
     id: "benjohns",

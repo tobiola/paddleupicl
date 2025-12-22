@@ -156,12 +156,14 @@ export const baseRules = {
 export const leagueRules = {
   title: "Paddle Up Individual Championship League",
   fee: "$80",
+  summary: "Season-long championship format — 6 weeks of merit-based play with promotion/relegation, weekly standings, and season prizes. Ideal for players who want sustained competitive play and a path to the championship.",
   ...baseRules
 } as const;
 
 /* challengeRules: current short-format variant — reuse baseRules with overrides */
 export const challengeRules = {
   title: "The Challenge",
+  summary: "Short-form weekly competition — rotating partners, per-night entry, and court promotion each round. Quick, social, and competitive nights focused on weekly performance.",
   price: { amount: 15, unit: "per night", display: "$15", note: "per night" },
   showSections: { seasonStructure: false, prizes: false, qualifiers: false },
   ...baseRules

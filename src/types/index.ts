@@ -43,7 +43,22 @@ export interface Season {
  * Qualifier events are similar in shape to a single Week (one-night events).
  * We keep a dedicated type for clarity in data files and components.
  */
-export type Qualifier = Week;
+export interface Event {
+  id: string;
+  name: string;
+  startDateTime: Date;
+  endDateTime?: Date;
+  allDay?: boolean;
+  location?: string;
+  status?: 'open' | 'closed' | 'cancelled';
+  link?: string;
+  label?: string;
+}
+
+export interface Qualifier extends Week {
+  startDateTime?: Date;
+  allDay?: boolean;
+}
 
 export type SeasonData = Season;
 
@@ -67,3 +82,60 @@ export interface AllTimeStats {
   seasons: number;
   rank?: number;
 }
+
+/* Rules & format types (shared contract for Format page and children) */
+
+export interface Price {
+  amount?: number;
+  unit?: string;
+  display: string;
+  note?: string;
+}
+
+export interface ShowSections {
+  seasonStructure?: boolean;
+  prizes?: boolean;
+  qualifiers?: boolean;
+}
+
+export interface RulesBase {
+  title: string;
+  summary?: string;
+  fee?: string;
+  price?: Price;
+  showSections?: ShowSections;
+  seasonStructure?: {
+    rosterSize?: number;
+    duration?: string;
+    when?: string;
+    safeZone?: string;
+    dropZone?: string;
+  };
+  register: {
+    url: string;
+    text: string;
+  };
+  schedule?: {
+    day?: string;
+    time?: string;
+  };
+  location?: {
+    name?: string;
+    url?: string;
+    city?: string;
+  };
+  participant?: {
+    type?: string;
+    note?: string;
+  };
+  seeding?: any;
+  general?: string[];
+  subs?: string[];
+  missedWeekNote?: string;
+}
+
+/* Derived types from concrete data to keep types aligned with actual exports */
+export type BaseRules = RulesBase;
+export type LeagueRules = typeof import('../data/rules').leagueRules;
+export type ChallengeRules = typeof import('../data/rules').challengeRules;
+export type Rules = LeagueRules | ChallengeRules;

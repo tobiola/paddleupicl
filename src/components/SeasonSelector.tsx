@@ -38,7 +38,7 @@ const SeasonSelector: React.FC<Props> = ({ value, onChange, seasons, qualifiers 
         {qualifiers.length > 0 && <option disabled>──────────── Qualifiers ────────────</option>}
         {qualifiers.map((q) => (
           <option key={q.id} value={`qualifier:${q.id}`}>
-            {`Qualifier • ${q.date}`}
+            {`Qualifier • ${q.startDateTime instanceof Date ? q.startDateTime.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : q.date}`}
           </option>
         ))}
         <option value="all-time">All Time</option>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
-import { players as allPlayers } from '../data/leagueData';
 import PlayerAvatar from './ui/PlayerAvatar';
+import players from '../data/players';
 
 interface PlayerSelectProps {
   value: string;
@@ -24,7 +24,7 @@ const PlayerSelect: React.FC<PlayerSelectProps> = ({ value, onChange, placeholde
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredPlayers = allPlayers.filter(p => 
+  const filteredPlayers = players.filter(p => 
     p.name.toLowerCase().includes((searchTerm || value).toLowerCase())
   );
 

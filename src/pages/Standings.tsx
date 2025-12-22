@@ -1,157 +1,118 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { seasonData, pastSeasons, players, qualifiers } from '../data/leagueData';
-import { calculateSeasonStats, calculateAllTimeStats, calculateWeekFinalPositions } from '../lib/leagueUtils';
-import { Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { cn } from '../lib/utils';
-import WeeklyPoints from '../components/WeeklyPoints';
+import { Link } from 'react-router-dom';
+import { challengeEvents } from '../data/challengeEvents';
+import { calculateWeekFinalPositions } from '../lib/leagueUtils';
+import { Trophy } from 'lucide-react';
 import Card from '../components/ui/Card';
 import PlayerAvatar from '../components/ui/PlayerAvatar';
 import PageHeader from '../components/ui/PageHeader';
 import RankBadge from '../components/ui/RankBadge';
-import { Player, Standing, PlayerStats, AllTimeStats } from '../types';
-import SeasonSelector from '../components/SeasonSelector';
+import { Player } from '../types';
+import { players } from '../data/players';
+import { cn } from '../lib/utils';
 
-type CombinedStanding = Partial<PlayerStats> & Partial<AllTimeStats> & Partial<Standing> & {
+type LeaderboardRow = {
   playerId: string;
-  rank: number;
   points: number;
+  eventsPlayed: number;
+  rank?: number;
 };
 
-interface SortConfig {
-  key: keyof CombinedStanding | 'winPct' | 'pointsPct';
-  direction: 'asc' | 'desc';
-}
+/* UI helper: build month options from events */
+const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+const monthLabel = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 
 const Standings: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'rank', direction: 'asc' });
-  const seasonParam = searchParams.get('season');
-  const isAllTime = seasonParam === 'all-time';
+  const [selection, setSelection] = useState<'all' | string>('all'); // 'all' or monthKey like "2025-12"
 
-  // Combine all seasons into one list for the selector
-  const allSeasons = [seasonData, ...pastSeasons];
-  const selectedSeason = !isAllTime ? (allSeasons.find(s => s.season === seasonParam) || seasonData) : null;
+  // Build month options from challengeEvents that contain startDateTime
+  const months = useMemo(() => {
+    const set = new Map<string, Date>();
+    challengeEvents.forEach((ev) => {
+      if (ev.startDateTime instanceof Date && !isNaN(ev.startDateTime.getTime())) {
+        const key = monthKey(ev.startDateTime);
+        if (!set.has(key)) set.set(key, ev.startDateTime);
+      }
+    });
+    // sort descending (newest first)
+    return Array.from(set.entries())
+      .sort((a, b) => (a[1].getTime() < b[1].getTime() ? 1 : -1))
+      .map(([key, d]) => ({ key, label: monthLabel(d) }));
+  }, []);
 
-  // Calculate standings if needed
-  const baseStandings = useMemo((): CombinedStanding[] => {
-    if (isAllTime) {
-      return calculateAllTimeStats(seasonData, pastSeasons).map(s => ({
-        ...s,
-        rank: s.rank || 0,
-        playerId: s.playerId,
-        points: s.points
-      }));
-    }
+  // Compute leaderboard rows from selected events
+  const leaderboard = useMemo(() => {
+    // Filter events: only those with matches
+    const events = challengeEvents.filter((ev) => Array.isArray(ev.matches) && ev.matches.length > 0);
+    const filtered = selection === 'all'
+      ? events
+      : events.filter((ev) => monthKey(ev.startDateTime) === selection);
 
-    // Qualifier selection (value: 'qualifier:<id>')
-    if (seasonParam && seasonParam.startsWith('qualifier:')) {
-      const parts = seasonParam.split(':');
-      const qId = parseInt(parts[1] || '', 10);
-      const qualifier = qualifiers.find(q => q.id === qId);
-      if (!qualifier) return [];
-      const final = calculateWeekFinalPositions(qualifier);
-      if (!final) return [];
-      return final.map(f => ({
-        playerId: f.playerId,
-        rank: f.globalRank,
-        points: f.pointsEarned
-      }));
-    }
+    // aggregate points per player using calculateWeekFinalPositions on synthetic Week
+    const pointsByPlayer = new Map<string, { points: number; events: number }>();
 
-    // Regular season selection
-    if (selectedSeason && selectedSeason.weeks) {
-      return calculateSeasonStats(selectedSeason).map((stat, index) => ({
-        ...stat,
-        rank: index + 1,
-        playerId: stat.id
-      }));
-    }
-
-    // No stored standings fallback — we derive from matches only
-    return [];
-  }, [selectedSeason, isAllTime, seasonParam]);
-
-  const standings = useMemo(() => {
-    let sortedData = [...baseStandings];
-    if (sortConfig.key !== 'rank') {
-      sortedData.sort((a, b) => {
-        let aValue: number = 0;
-        let bValue: number = 0;
-
-        // Handle calculated percentages
-        if (sortConfig.key === 'winPct') {
-          aValue = (a.wins || 0) + (a.losses || 0) > 0 ? ((a.wins || 0) / ((a.wins || 0) + (a.losses || 0))) : 0;
-          bValue = (b.wins || 0) + (b.losses || 0) > 0 ? ((b.wins || 0) / ((b.wins || 0) + (b.losses || 0))) : 0;
-        } else if (sortConfig.key === 'pointsPct') {
-          aValue = (a.pointsWon || 0) + (a.pointsLost || 0) > 0 ? ((a.pointsWon || 0) / ((a.pointsWon || 0) + (a.pointsLost || 0))) : 0;
-          bValue = (b.pointsWon || 0) + (b.pointsLost || 0) > 0 ? ((b.pointsWon || 0) / ((b.pointsWon || 0) + (b.pointsLost || 0))) : 0;
-        } else {
-          // @ts-ignore - dynamic access
-          aValue = a[sortConfig.key] || 0;
-          // @ts-ignore - dynamic access
-          bValue = b[sortConfig.key] || 0;
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
+    filtered.forEach((ev, idx) => {
+      const weekLike = {
+        id: idx,
+        date: ev.startDateTime ? ev.startDateTime.toISOString() : ev.id,
+        isCompleted: true,
+        matches: ev.matches
+      } as any;
+      const finals = calculateWeekFinalPositions(weekLike);
+      if (!finals) return;
+      finals.forEach((f: any) => {
+        const id = f.playerId;
+        const pts = f.pointsEarned || 0;
+        const entry = pointsByPlayer.get(id) || { points: 0, events: 0 };
+        entry.points += pts;
+        entry.events += 1;
+        pointsByPlayer.set(id, entry);
       });
-    } else {
-      // Default rank sort (asc)
-      sortedData.sort((a, b) => sortConfig.direction === 'asc' ? (a.rank || 0) - (b.rank || 0) : (b.rank || 0) - (a.rank || 0));
-    }
-    return sortedData;
-  }, [baseStandings, sortConfig]);
+    });
 
-  const handleSort = (key: keyof CombinedStanding | 'winPct' | 'pointsPct') => {
-    let direction: 'asc' | 'desc' = 'desc'; // Default to desc for stats (highest is best)
-    if (key === 'rank') direction = 'asc'; // Default to asc for rank (1 is best)
+    const rows: LeaderboardRow[] = Array.from(pointsByPlayer.entries()).map(([playerId, v]) => ({
+      playerId,
+      points: v.points,
+      eventsPlayed: v.events
+    }));
 
-    if (sortConfig.key === key) {
-      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-    }
-    setSortConfig({ key, direction });
-  };
+    // sort desc by points
+    rows.sort((a, b) => b.points - a.points);
 
-  const handleSeasonChange = (value: string) => {
-    if (value === 'all-time') {
-      setSearchParams({ season: 'all-time' });
-      return;
-    }
-    if (value.startsWith('qualifier:')) {
-      setSearchParams({ season: value });
-      return;
-    }
-    // keep default behavior: omit query param for current season
-    if (value === seasonData.season) {
-      searchParams.delete('season');
-      setSearchParams(searchParams);
-    } else {
-      setSearchParams({ season: value });
-    }
+    // assign ranks (1-based, tie -> same rank)
+    let lastPoints: number | null = null;
+    let rank = 0;
+    let seen = 0;
+    rows.forEach((r) => {
+      seen += 1;
+      if (lastPoints === null || r.points !== lastPoints) {
+        rank = seen;
+        lastPoints = r.points;
+      }
+      r.rank = rank;
+    });
+
+    return rows;
+  }, [selection]);
+
+  const handleSelectionChange = (v: string) => {
+    setSelection(v === 'all' ? 'all' : v);
   };
 
   return (
     <div className="space-y-8">
-      <PageHeader 
-        title={isAllTime ? "All-Time Standings" : "Standings"}
-        subtitle={isAllTime ? "Cumulative points across all seasons" : (selectedSeason?.date || `Last Updated: ${selectedSeason?.lastUpdated || ''}`)}
-      >
-        <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
-          {!isAllTime && selectedSeason?.season === seasonData.season && (
-            <div className="bg-primary-light text-primary px-4 py-2 rounded-lg text-sm font-medium border border-primary/50">
-              Top 12 qualify for next season
-            </div>
-          )}
-          <div className="relative">
-            <SeasonSelector
-              value={isAllTime ? 'all-time' : (selectedSeason?.season || seasonData.season)}
-              onChange={handleSeasonChange}
-              seasons={allSeasons}
-              qualifiers={qualifiers}
-            />
-          </div>
+      <PageHeader title="Challenge Leaderboard" subtitle="Leaderboard derived from Challenge events (month or all time)">
+        <div className="flex items-center gap-4">
+          <select
+            value={selection}
+            onChange={(e) => handleSelectionChange(e.target.value)}
+            className="appearance-none bg-surface border border-border text-text-main text-sm rounded-lg pl-3 pr-8 py-2"
+          >
+            <option value="all">All Time</option>
+            {months.map((m) => (
+              <option key={m.key} value={m.key}>{m.label}</option>
+            ))}
+          </select>
         </div>
       </PageHeader>
 
@@ -160,69 +121,27 @@ const Standings: React.FC = () => {
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-surface-highlight">
               <tr>
-                <SortableHeader label="Rank" column="rank" sortConfig={sortConfig} onSort={handleSort} className="pl-6" />
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Player</th>
-                <SortableHeader label="Total Points" column="points" sortConfig={sortConfig} onSort={handleSort} />
-                {!isAllTime && selectedSeason?.season === seasonData.season && (
-                  <>
-                    <SortableHeader label="Games Won" column="wins" sortConfig={sortConfig} onSort={handleSort} />
-                    <SortableHeader label="Games Lost" column="losses" sortConfig={sortConfig} onSort={handleSort} />
-                    <SortableHeader label="Games Won %" column="winPct" sortConfig={sortConfig} onSort={handleSort} />
-                    <SortableHeader label="Pts Won" column="pointsWon" sortConfig={sortConfig} onSort={handleSort} />
-                    <SortableHeader label="Pts Lost" column="pointsLost" sortConfig={sortConfig} onSort={handleSort} />
-                    <SortableHeader label="Pts Won %" column="pointsPct" sortConfig={sortConfig} onSort={handleSort} />
-                  </>
-                )}
-                {isAllTime && (
-                  <SortableHeader label="Seasons" column="seasons" sortConfig={sortConfig} onSort={handleSort} />
-                )}
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider pl-6">Rank</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Player</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Points</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Events</th>
               </tr>
             </thead>
             <tbody className="bg-surface divide-y divide-border">
-              {standings.map((entry) => {
-const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
-                
-                // Calculate percentages
-                const totalGames = (entry.wins || 0) + (entry.losses || 0);
-                const winPct = totalGames > 0 ? ((entry.wins! / totalGames) * 100).toFixed(1) : "0.0";
-                
-                const totalPoints = (entry.pointsWon || 0) + (entry.pointsLost || 0);
-                const pointsPct = totalPoints > 0 ? ((entry.pointsWon! / totalPoints) * 100).toFixed(1) : "0.0";
-
+              {leaderboard.map((row) => {
+                const player = players.find(p => p.id === row.playerId) || { name: "Unknown", imageUrl: "", id: "unknown" } as Player;
                 return (
-                  <tr 
-                    key={entry.playerId} 
-                    className={cn(
-                      "hover:bg-surface-highlight transition-colors",
-                      entry.rank <= 4 ? "bg-primary-light/10" : ""
-                    )}
-                  >
-                    <td className="px-4 pl-6 py-4 whitespace-nowrap">
-                      <RankBadge rank={entry.rank} />
-                    </td>
+                  <tr key={row.playerId} className={cn("hover:bg-surface-highlight transition-colors", (row.rank || 0) <= 4 ? "bg-primary-light/10" : "")}>
+<td className="px-4 pl-6 py-4 whitespace-nowrap"><RankBadge rank={row.rank ?? 0} /></td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <Link to={`/player/${entry.playerId}`} className="flex items-center group">
-<PlayerAvatar imageUrl={player.imageUrl} name={player.name} className="mr-3 group-hover:ring-2 ring-primary transition-all" />
+                      <Link to={`/player/${row.playerId}`} className="flex items-center group">
+                        <PlayerAvatar imageUrl={player.imageUrl} name={player.name} className="mr-3 group-hover:ring-2 ring-primary transition-all" />
                         <div className="text-sm font-medium text-text-main group-hover:text-primary transition-colors">{player.name}</div>
-                        {entry.rank === 1 && <Trophy className="ml-2 h-4 w-4 text-warning" />}
+                        {row.rank === 1 && <Trophy className="ml-2 h-4 w-4 text-warning" />}
                       </Link>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-text-main">{entry.points}</div>
-                    </td>
-                    {!isAllTime && selectedSeason?.season === seasonData.season && (
-                      <>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{entry.wins || 0}</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{entry.losses || 0}</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{winPct}%</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{entry.pointsWon || 0}</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{entry.pointsLost || 0}</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{pointsPct}%</td>
-                      </>
-                    )}
-                    {isAllTime && (
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{entry.seasons}</td>
-                    )}
+                    <td className="px-4 py-4 whitespace-nowrap"><div className="text-sm font-bold text-text-main">{row.points}</div></td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-text-muted">{row.eventsPlayed}</td>
                   </tr>
                 );
               })}
@@ -230,41 +149,8 @@ const player = players.find(p => p.id === entry.playerId) || { name: "Unknown", 
           </table>
         </div>
       </Card>
-
-      {!isAllTime && <WeeklyPoints />}
     </div>
   );
 };
-
-const SortIcon: React.FC<{ column: string; sortConfig: SortConfig }> = ({ column, sortConfig }) => {
-  if (sortConfig.key !== column) return <ArrowUpDown className="h-3 w-3 ml-1 text-text-muted/50" />;
-  return sortConfig.direction === 'asc' 
-    ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
-};
-
-interface SortableHeaderProps {
-  label: string;
-  column: keyof CombinedStanding | 'winPct' | 'pointsPct';
-  className?: string;
-  sortConfig: SortConfig;
-  onSort: (key: keyof CombinedStanding | 'winPct' | 'pointsPct') => void;
-}
-
-const SortableHeader: React.FC<SortableHeaderProps> = ({ label, column, className, sortConfig, onSort }) => (
-  <th 
-    scope="col" 
-    className={cn(
-      "px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider cursor-pointer hover:bg-surface-highlight/50 transition-colors select-none",
-      className
-    )}
-    onClick={() => onSort(column)}
-  >
-    <div className="flex items-center">
-      {label}
-      <SortIcon column={column} sortConfig={sortConfig} />
-    </div>
-  </th>
-);
 
 export default Standings;
